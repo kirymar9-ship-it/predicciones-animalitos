@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predicciones Animalitos Pro</title>
+    <title>Predicciones Animalitos Pro v2</title>
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
 
     <div class="contenedor-principal">
         <h1 class="titulo-app">Resultados de Animalitos</h1>
-        <p class="subtitulo">Selecciona un sorteo y una fecha para ver y analizar resultados</p>
+        <p class="subtitulo">Sistema inteligente con Memoria Histórica y Aprendizaje Automático</p>
 
         <section class="tarjeta panel-configuracion">
             <div class="grupo-control">
@@ -30,16 +30,20 @@
                 </select>
             </div>
             <div class="grupo-control mt-10">
-                <label for="fecha-inicio">Fecha de Inicio del Historial (Genera 7 días)</label>
-                <input type="date" id="fecha-inicio">
+                <label for="fecha-carga">Selecciona Fecha para Cargar/Editar Resultados</label>
+                <input type="date" id="fecha-carga">
             </div>
+            <div id="db-status" class="status-badge mt-10">Historial: 0 días registrados</div>
         </section>
 
-        <section class="panel-datos" id="panel-datos-semana" style="display: none;">
-            <h2 class="seccion-titulo">Carga de Resultados por Hora</h2>
+        <section class="panel-datos" id="panel-datos-dia" style="display: none;">
+            <div class="header-seccion-datos">
+                <h2 class="seccion-titulo" id="titulo-fecha-activa">Resultados del Día</h2>
+                <button id="btnGuardarDia" class="btn-guardar">💾 Guardar Día</button>
+            </div>
             
-            <div class="tabs-navegacion" id="tabs-navegacion"></div>
-            <div class="tabs-contenido" id="tabs-contenido"></div>
+            <div class="grid-horas" id="grid-horas-inputs">
+                </div>
 
             <button id="btnGenerar" class="btn-verde">GENERAR ANÁLISIS Y PREDICCIÓN</button>
         </section>
@@ -47,23 +51,38 @@
         <section class="panel-resultados" id="panelResultados" style="display: none;">
             <h2 class="seccion-titulo text-center">ANÁLISIS ESTADÍSTICO 🚀</h2>
             
+            <div class="tarjeta indicador-aprendizaje">
+                <div class="aprendizaje-header">
+                    <span>🧠 Eficiencia del Modelo</span>
+                    <span id="txt-eficiencia" class="porcentaje-ia">100%</span>
+                </div>
+                <p id="txt-aprendizaje-log" class="resumen-indicador">El sistema está recopilando datos de aciertos...</p>
+            </div>
+
             <div class="grid-predicciones" id="tarjetas-prediccion-container"></div>
 
-            <div class="grid-indicadores">
+            <div class="grid-indicators-dos-columnas">
                 <div class="tarjeta indicador">
-                    <h3>🔥 Pool Caliente (Inercia)</h3>
-                    <p id="coincidencias-texto" class="resumen-indicador"></p>
+                    <h3>🔥 Pool Caliente (Últimas 48h)</h3>
                     <div id="pool-badges" class="contenedor-badges"></div>
                 </div>
+                <div class="tarjeta indicador">
+                    <h3>⚓ Conexión Histórica (Anclaje)</h3>
+                    <p id="txt-anclaje-info" class="resumen-indicador" style="color: var(--verde-brand)"></p>
+                    <div id="anclaje-badges" class="contenedor-badges"></div>
+                </div>
+            </div>
+
+            <div class="grid-indicadores">
                 <div class="tarjeta indicador border-alerta">
-                    <h3>📦 Enjaulados (Compensación)</h3>
+                    <h3>📦 Enjaulados (Compensación de Mes)</h3>
                     <p id="alerta-enjaulados" class="resumen-indicador"></p>
                     <div id="enjaulados-badges" class="contenedor-badges"></div>
                 </div>
             </div>
 
             <div class="tarjeta seccion-tablero">
-                <h3>Mapa de Calor del Tablero</h3>
+                <h3>Mapa de Calor del Mes</h3>
                 <div class="tablero-grid" id="tablero-grid"></div>
             </div>
 
@@ -85,3 +104,4 @@
     <script src="app.js"></script>
 </body>
 </html>
+
