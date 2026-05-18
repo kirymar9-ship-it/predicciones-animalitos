@@ -96,7 +96,7 @@ document.getElementById('btnGuardarDia').addEventListener('click', () => {
     localStorage.setItem(`db_animalitos_${selectLoteria.value}`, JSON.stringify(BaseDatos));
     
     actualizarEstadoDB();
-    alert(`🎉 Resultados del día ${fecha} guardados perfectamente.`);
+    alert(`🎉 Resultados del día ${fecha.split('-').reverse().join('/')} guardados perfectamente.`);
 });
 
 // ==========================================
@@ -143,7 +143,7 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         let universo = ["0", "00"];
         for(let i=1; i<=75; i++) universo.push(i.toString());
 
-        // 1. EXTRAER VALORES ACTUALES EN PANTALLA (Para predicción en vivo intra-día)
+        // 1. EXTRAER VALORES ACTUALES EN PANTALLA
         let numsHoyEnPantalla = [];
         HORAS.forEach((_, i) => {
             let val = document.getElementById(`hora-inp-${i}`).value.trim();
@@ -153,7 +153,7 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         });
 
-        // 2. OBTENER POOL CALIENTE (Días anteriores a hoy)
+        // 2. OBTENER POOL CALIENTE
         let diasFiltrados = fechasOrdenadas.filter(f => f < fechaActual);
         if(diasFiltrados.length === 0) diasFiltrados = [...fechasOrdenadas]; 
         
@@ -165,7 +165,7 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
         let poolCaliente = [...new Set(ultimosNums)].sort((a,b) => freq48[b] - freq48[a]);
 
-        // 3. ALGORITMO DE ANCLAJE EN VIVO (Cruza cualquier número salido hoy con el historial)
+        // 3. ALGORITMO DE ANCLAJE EN VIVO
         let numerosAncladosMatch = [];
         if (numsHoyEnPantalla.length > 0) {
             let soloNumerosHoy = numsHoyEnPantalla.map(x => x.num);
@@ -173,7 +173,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             fechasOrdenadas.forEach(f => {
                 if (f !== fechaActual) { 
                     let resultadosEseDia = BaseDatos[f] || [];
-                    // Verifica si este día del pasado comparte CUALQUIERA de los que ya salieron hoy
                     let compartePatron = soloNumerosHoy.some(n => resultadosEseDia.includes(n));
                     
                     if (compartePatron) {
@@ -200,7 +199,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         });
         
-        // Unir secuencialmente lo que va de día en pantalla al historial continuo
         numsHoyEnPantalla.forEach(item => {
             todosLosVistos.push(item.num);
         });
@@ -208,7 +206,7 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         let setVistos = new Set(todosLosVistos);
         let enjaulados = universo.filter(n => !setVistos.has(n));
 
-        // 5. CADENA DE TRANSICIONES (Actualizada al último minuto salido hoy)
+        // 5. CADENA DE TRANSICIONES
         let transiciones = {};
         for (let i = 0; i < todosLosVistos.length - 1; i++) {
             let act = todosLosVistos[i];
@@ -224,7 +222,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             pesos[n] = (pesos[n] || 0) + (ModeloPesos.anclaje - (i * 5));
         });
 
-        // El último número de la cadena ahora es de forma real el último que el usuario metió en pantalla
         let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
         if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
             transiciones[ultimoNumeroGlobal].forEach(n => {
@@ -243,11 +240,10 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         let sugerencias = Object.keys(pesos).sort((a,b) => pesos[b] - pesos[a]);
         if(sugerencias.length < 5) sugerencias = [...universo]; 
 
-        // Guardar la predicción para la evaluación del feedback-loop al final del día
         localStorage.setItem(`predicciones_${selectLoteria.value}_${fechaActual}`, JSON.stringify(sugerencias.slice(0, 5)));
 
         // ==========================================
-        // RENDERIZADO COMPLETO Y SEGURO DE LA INTERFAZ
+        // RENDERIZADO CON TEXTOS VISIBLES Y SEGUROS
         // ==========================================
         const fName = (n) => `[${n.padStart(2,'0')}] ${DICCIONARIO[n] || 'Animal'}`;
 
@@ -255,22 +251,22 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         document.getElementById('txt-eficiencia').innerText = `${porcEficiencia}%`;
         document.getElementById('txt-aprendizaje-log').innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones del mes. Peso de Anclaje adaptativo: ${ModeloPesos.anclaje}pts.`;
 
-        // Tarjetas Principales
+        // Tarjetas Principales (Cambiado color de texto a verdes oscuros legibles en vez de la variable clara)
         document.getElementById('tarjetas-prediccion-container').innerHTML = `
             <div class="tarjeta-prediccion">
                 <div class="pred-info"><h4>${fName(sugerencias[0])}</h4><p>Fuerza Máxima Predictiva para el resto del día</p></div>
-                <div class="pred-porcentaje">${Math.min(92 + porcEficiencia/50, 99).toFixed(0)}%</div>
+                <div class="pred-porcentaje" style="color: #2e7d32;">${Math.min(92 + porcEficiencia/50, 99).toFixed(0)}%</div>
             </div>
             <div class="tarjeta-prediccion">
                 <div class="pred-info"><h4>${fName(sugerencias[1])}</h4><p>Siguiente en Cadena de Transición</p></div>
-                <div class="pred-porcentaje">86%</div>
+                <div class="pred-porcentaje" style="color: #2e7d32;">86%</div>
             </div>
-            <div class="tarjeta-prediccion ${poolAnclajeFinal.length > 0 ? '' : 'alerta'}">
+            <div class="tarjeta-prediccion">
                 <div class="pred-info">
                     <h4>${fName(poolAnclajeFinal[0] || enjaulados[0] || sugerencias[2])}</h4>
                     <p>${poolAnclajeFinal.length > 0 ? 'Fuerza de Anclaje de Sorteos de Hoy' : 'Compensación Crítica (Enjaulado)'}</p>
                 </div>
-                <div class="pred-porcentaje" style="color:${poolAnclajeFinal.length > 0 ? 'var(--verde-brand)' : 'var(--rojo-alerta)'}">
+                <div class="pred-porcentaje" style="color:${poolAnclajeFinal.length > 0 ? '#2e7d32' : 'var(--rojo-alerta)'}">
                     ${poolAnclajeFinal.length > 0 ? '83%' : '74%'}
                 </div>
             </div>
@@ -278,17 +274,24 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
 
         document.getElementById('pool-badges').innerHTML = poolCaliente.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('');
         
-        // Modificación del bloque informativo de anclaje
-        if (numsHoyEnPantalla.length > 0) {
-            document.getElementById('txt-anclaje-info').innerText = `${numsHoyEnPantalla.length} sorteo(s) detectado(s) hoy para cruce dinámico.`;
-            document.getElementById('anclaje-badges').innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando más coincidencias...</div>';
-        } else {
-            document.getElementById('txt-anclaje-info').innerText = "Introduce al menos un resultado de hoy para activar.";
-            document.getElementById('anclaje-badges').innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
+        // Renderizado del bloque informativo de anclaje
+        const txtAnclaje = document.getElementById('txt-anclaje-info');
+        const badgesAnclaje = document.getElementById('anclaje-badges');
+        if (txtAnclaje && badgesAnclaje) {
+            if (numsHoyEnPantalla.length > 0) {
+                txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) detectado(s) hoy para cruce dinámico.`;
+                badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando más coincidencias...</div>';
+            } else {
+                txtAnclaje.innerText = "Introduce al menos un resultado de hoy para activar.";
+                badgesAnclaje.innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
+            }
         }
 
-        document.getElementById('enjaulados-badges').innerHTML = enjaulados.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Tablero limpio</div>';
-        document.getElementById('alerta-enjaulados').innerText = `${enjaulados.length} animales bloqueados este mes.`;
+        // Renderizado seguro de enjaulados (en caso de que exista el contenedor en el HTML)
+        const badgesEnjaulados = document.getElementById('enjaulados-badges');
+        const alertaEnjaulados = document.getElementById('alerta-enjaulados');
+        if (badgesEnjaulados) badgesEnjaulados.innerHTML = enjaulados.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Tablero limpio</div>';
+        if (alertaEnjaulados) alertaEnjaulados.innerText = `${enjaulados.length} animales bloqueados este mes.`;
 
         let tableroHTML = '';
         universo.forEach(n => {
@@ -297,26 +300,24 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         });
         document.getElementById('tablero-grid').innerHTML = tableroHTML;
 
-        // CRONOGRAMA INTELIGENTE: SEPARA REALES DE FUTURAS PREDICCIONES
+        // CRONOGRAMA INTELIGENTE
         let cronoHTML = '';
         HORAS.forEach((h, i) => {
             let inputVal = document.getElementById(`hora-inp-${i}`).value.trim();
             let normInput = normalizarNumero(inputVal);
             
             if (normInput) {
-                // Sorteo ya jugado
                 cronoHTML += `
                     <div class="cronograma-item" style="border-left: 4px solid var(--azul-guardar); background-color: rgba(37, 99, 235, 0.05)">
-                        <span class="crono-hora" style="color: var(--texto-secundario)">${h}</span>
+                        <span class="crono-hora">${h}</span>
                         <strong>✅ ${fName(normInput)}</strong>
                     </div>`;
             } else {
-                // Proyección para las horas vacías
                 let fav = sugerencias[i % sugerencias.length];
                 cronoHTML += `
                     <div class="cronograma-item">
                         <span class="crono-hora">${h}</span>
-                        <strong style="color: var(--verde-brand)">🔮 ${fName(fav)}</strong>
+                        <strong style="color: #2e7d32;">🔮 ${fName(fav)}</strong>
                     </div>`;
             }
         });
@@ -360,4 +361,3 @@ function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
     localStorage.setItem(`pesos_animalitos_${loteria}`, JSON.stringify(ModeloPesos));
     localStorage.removeItem(keyPreds);
 }
-
