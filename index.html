@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicciones Animalitos Pro</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="menu-icon">☰</div>
+        <div class="user-info">
+            <span class="saldo-badge">440,00 VES 🇻🇪</span>
+            <div class="avatar">👤</div>
+        </div>
+    </header>
+
+    <div class="contenedor-principal">
+        <h1 class="titulo-app">Resultados de Animalitos</h1>
+        <p class="subtitulo">Selecciona un sorteo y una fecha para ver y analizar resultados</p>
+
+        <section class="tarjeta panel-configuracion">
+            <div class="grupo-control">
+                <label for="select-loteria">Selecciona un sorteo</label>
+                <select id="select-loteria">
+                    <option value="guacharo">GUACHARO</option>
+                    <option value="la-granjita">LA GRANJITA</option>
+                    <option value="loto-chaima">LOTO CHAIMA</option>
+                    <option value="lotto-activo">LOTTO ACTIVO</option>
+                </select>
+            </div>
+            <div class="grupo-control mt-10">
+                <label for="fecha-inicio">Fecha de Inicio del Historial (Genera 7 días)</label>
+                <input type="date" id="fecha-inicio">
+            </div>
+        </section>
+
+        <section class="panel-datos" id="panel-datos-semana" style="display: none;">
+            <h2 class="seccion-titulo">Carga de Resultados por Hora</h2>
+            
+            <div class="tabs-navegacion" id="tabs-navegacion"></div>
+            <div class="tabs-contenido" id="tabs-contenido"></div>
+
+            <button id="btnGenerar" class="btn-verde">GENERAR ANÁLISIS Y PREDICCIÓN</button>
+        </section>
+
+        <section class="panel-resultados" id="panelResultados" style="display: none;">
+            <h2 class="seccion-titulo text-center">ANÁLISIS ESTADÍSTICO 🚀</h2>
+            
+            <div class="grid-predicciones" id="tarjetas-prediccion-container"></div>
+
+            <div class="grid-indicadores">
+                <div class="tarjeta indicador">
+                    <h3>🔥 Pool Caliente (Inercia)</h3>
+                    <p id="coincidencias-texto" class="resumen-indicador"></p>
+                    <div id="pool-badges" class="contenedor-badges"></div>
+                </div>
+                <div class="tarjeta indicador border-alerta">
+                    <h3>📦 Enjaulados (Compensación)</h3>
+                    <p id="alerta-enjaulados" class="resumen-indicador"></p>
+                    <div id="enjaulados-badges" class="contenedor-badges"></div>
+                </div>
+            </div>
+
+            <div class="tarjeta seccion-tablero">
+                <h3>Mapa de Calor del Tablero</h3>
+                <div class="tablero-grid" id="tablero-grid"></div>
+            </div>
+
+            <div class="tarjeta seccion-horaria mb-80">
+                <h3>Proyección de Fuerza por Hora</h3>
+                <div class="grid-cronograma-horas" id="cronograma-horas-container"></div>
+            </div>
+        </section>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active">🏠<br>LOBBY</div>
+        <div class="nav-item">🎲<br>CASINO</div>
+        <div class="nav-item item-central">💰<br>DEPOSITAR</div>
+        <div class="nav-item">🔍<br>EXPLORAR</div>
+        <div class="nav-item">💬<br>CHAT</div>
+    </nav>
+
+    <script src="app.js"></script>
+</body>
+</html>
