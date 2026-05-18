@@ -1,79 +1,339 @@
-/* VARIABLES DE COLOR MANTENIDAS */
+/* ==========================================
+   NUEVA PALETA DE COLORES (TEMA CLARO)
+   ========================================== */
 :root {
-    --bg-app: #0d0415;
-    --bg-tarjeta: #1c0d2e;
-    --bg-input: #2a1640;
-    --verde-brand: #8dc63f;
-    --verde-hover: #7ab32f;
-    --texto-principal: #ffffff;
-    --texto-secundario: #9ca3af;
-    --borde-color: #3b1f5a;
-    --rojo-alerta: #ef4444;
-    --azul-guardar: #2563eb;
+    --bg-app: #fff1e8; /* Fondo Crema Suave */
+    --bg-tarjeta: #fbe3e3; /* Rosa Pálido para tarjetas */
+    --bg-input: #ffffff; /* Blanco puro para inputs */
+    --borde-color: #e0d0c5; /* Gris/Crema sutil para bordes */
+    
+    --verde-brand: #a7d49b; /* Verde Musgo Pálido Elegante */
+    --verde-hover: #8fbc8f; /* Verde musgo un poco más oscuro */
+    
+    --texto-principal: #000000; /* Negro para todos los textos */
+    --texto-secundario: #444444; /* Gris oscuro para subtítulos */
+    
+    --rojo-alerta: #dc2626; /* Rojo para enjaulados */
+    --azul-guardar: #2563eb; /* Azul para guardar */
     --azul-hover: #1d4ed8;
 }
 
-/* ... (Todo tu CSS anterior se mantiene igual) ... */
+/* RESET GENERAL Y MEJORA DE ESPACIADO (UX) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
 
-/* NUEVOS COMPONENTES */
+body {
+    background-color: var(--bg-app);
+    color: var(--texto-principal);
+    padding: 10px;
+    padding-bottom: 30px; /* Espacio final limpio */
+    line-height: 1.5;
+}
+
+/* TOP BAR (TEMA CLARO) */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: var(--bg-app);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--borde-color);
+}
+
+.logo-placeholder {
+    font-size: 20px;
+}
+
+.saldo-badge {
+    background-color: var(--bg-tarjeta);
+    color: var(--texto-principal);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid var(--borde-color);
+}
+.user-info { display: flex; align-items: center; gap: 10px; }
+.avatar { font-size: 18px; }
+
+/* CONTENEDOR PRINCIPAL (MÁS ESPACIADO) */
+.contenedor-principal {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 20px 15px;
+}
+
+.titulo-app { 
+    color: var(--texto-principal); 
+    font-size: 24px; 
+    margin-bottom: 8px; 
+    text-align: center;
+}
+
+.subtitulo { 
+    color: var(--texto-secundario); 
+    font-size: 14px; 
+    margin-bottom: 30px; 
+    text-align: center;
+}
+
+/* SECCIONES TITULOS (LIMPIOS) */
+.seccion-titulo { 
+    font-size: 17px; 
+    margin: 30px 0 15px 0; 
+    color: var(--texto-principal); 
+    font-weight: 600;
+}
+
+.text-center { text-align: center; }
+.mt-15 { margin-top: 15px; }
+
+/* COMPONENTE TARJETA (TEMA ROSA CLARO) */
+.tarjeta {
+    background-color: var(--bg-tarjeta);
+    border-radius: 12px;
+    padding: 25px; /* Más espacio interno */
+    border: 1px solid var(--borde-color);
+    /* Sombra muy sutil para tema claro */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04); 
+    margin-bottom: 20px;
+}
+
+.tarjeta h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: var(--texto-principal);
+}
+
+/* GRUPOS DE CONTROL E INPUTS (LIMPIOS Y CLAROS) */
+.grupo-control label { 
+    display: block; 
+    font-size: 13px; 
+    color: var(--texto-principal); 
+    font-weight: 500;
+    margin-bottom: 8px; 
+}
+
+select, input[type="date"], input[type="text"] {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--borde-color);
+    color: var(--texto-principal);
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+select:focus, input:focus { 
+    border-color: var(--verde-hover); 
+    box-shadow: 0 0 0 3px rgba(167, 212, 155, 0.2);
+}
+
+.status-badge {
+    background-color: #fff;
+    border: 1px solid var(--borde-color);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--texto-secundario);
+    display: inline-block;
+}
+
+/* ENTRADA DE DATOS DEL DÍA (ESPACIADO MEJORADO) */
 .header-seccion-datos {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 20px 0 15px 0;
+    margin: 35px 0 15px 0;
 }
 
 .btn-guardar {
     background-color: var(--azul-guardar);
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: bold;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
     font-size: 13px;
     transition: background 0.2s;
 }
 .btn-guardar:hover { background-color: var(--azul-hover); }
 
-.status-badge {
-    background-color: #11051c;
+/* GRID DE HORAS (MÁS AIRE) */
+.grid-horas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.hora-bloque {
+    background-color: var(--bg-tarjeta);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
     border: 1px solid var(--borde-color);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    color: var(--texto-secundario);
-    display: inline-block;
+}
+
+.hora-label { 
+    display: block; 
+    font-size: 11px; 
+    color: var(--texto-secundario); 
+    margin-bottom: 6px; 
+    font-weight: 600;
+}
+
+.hora-input { 
+    text-align: center; 
+    font-size: 19px; 
+    font-weight: bold; 
+    padding: 10px; 
+    background-color: #fff;
+}
+
+/* BOTÓN PRINCIPAL (VERDE PÁLIDO ELEGANTE) */
+.btn-verde {
+    width: 100%;
+    background-color: var(--verde-brand);
+    color: #000000; /* Texto negro sobre verde pálido */
+    border: none;
+    padding: 18px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 3px 6px rgba(167, 212, 155, 0.3);
+}
+.btn-verde:hover { background-color: var(--verde-hover); }
+.btn-verde:active { transform: translateY(1px); }
+
+/* PANEL DE RESULTADOS (TEMA CLARO) */
+.panel-resultados {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed var(--borde-color);
 }
 
 .indicador-aprendizaje {
-    background: linear-gradient(135deg, #1c0d2e 0%, #11051c 100%);
-    border: 1px solid rgba(141, 198, 63, 0.2);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
+    background: #fff;
+    border: 1px solid var(--borde-color);
+    border-left: 4px solid var(--verde-brand);
 }
 .aprendizaje-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 5px;
+    color: var(--texto-principal);
 }
 .porcentaje-ia {
-    color: var(--verde-brand);
+    color: #2e7d32; /* Verde oscuro para contraste */
 }
 
-.grid-indicators-dos-columnas {
+/* PREDICCIONES (TARJETAS CLARAS CON BORDES COLOR) */
+.grid-predicciones { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    margin-bottom: 25px; 
+}
+
+.tarjeta-prediccion {
+    background-color: #fff;
+    border: 1px solid var(--borde-color);
+    border-left: 5px solid var(--verde-brand);
+    padding: 18px 22px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+.tarjeta-prediccion.alerta { border-left-color: var(--rojo-alerta); }
+.tarjeta-prediccion h4 { color: var(--texto-principal); font-size: 17px; }
+.pred-info p { color: var(--texto-secundario); font-size: 12px; }
+.pred-porcentaje { color: #2e7d32; font-weight: bold; font-size: 18px; }
+
+/* INDICADORES (DOS COLUMNAS) */
+.grid-indicators-dos-columnas { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-bottom: 20px; 
+}
+.border-alerta { border: 1px solid rgba(220, 38, 38, 0.2); }
+.resumen-indicador { font-size: 12px; color: var(--texto-secundario); margin-bottom: 12px; }
+
+.contenedor-badges { display: flex; flex-wrap: wrap; gap: 7px; }
+.badge-animalito {
+    background-color: #fff;
+    border: 1px solid var(--borde-color);
+    color: var(--texto-principal);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* TABLERO (MAPA DE CALOR CLARO) */
+.tablero-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 15px;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+    margin-top: 15px;
+}
+.celda-tablero {
+    background-color: #fff;
+    border: 1px solid var(--borde-color);
+    padding: 8px 0;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #888; /* Apagado por defecto */
+}
+.celda-tablero.activa { 
+    background-color: rgba(167, 212, 155, 0.2); 
+    color: #2e7d32; 
+    border-color: var(--verde-brand); 
+}
+.celda-tablero.fria { 
+    background-color: rgba(220, 38, 38, 0.08); 
+    color: var(--rojo-alerta); 
+    border-color: rgba(220, 38, 38, 0.2);
 }
 
+/* HORAS CRONOGRAMA (LIMPIO) */
+.grid-cronograma-horas { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+    margin-top: 15px; 
+}
+.cronograma-item {
+    background-color: #fff;
+    border: 1px solid var(--borde-color);
+    padding: 12px 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+.crono-hora { color: var(--texto-secundario); font-weight: 600; }
+.cronograma-item strong { color: var(--texto-principal); }
+
+/* AJUSTES RESPONSIVOS FINALES */
 @media (max-width: 480px) {
-    .grid-indicators-dos-columnas {
-        grid-template-columns: 1fr;
-    }
+    .grid-horas { grid-template-columns: repeat(2, 1fr); }
+    .grid-cronograma-horas { grid-template-columns: 1fr; }
+    .tarjeta { padding: 18px; }
 }
-
