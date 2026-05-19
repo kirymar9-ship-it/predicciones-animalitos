@@ -64,12 +64,12 @@ body {
 .contenedor-principal {
     max-width: 650px;
     margin: 0 auto;
-    padding: 20px 15px;
+    padding: 30px 25px;
 }
 
 /* TÍTULO ROSA METÁLICO */
 .titulo-app { 
-    font-size: 36px; /* Letra mucho más grande */
+    font-size: 56px; /* Letra mucho más grande */
     margin-bottom: 5px; 
     text-align: center;
     font-weight: 900;
