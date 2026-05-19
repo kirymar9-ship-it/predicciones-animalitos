@@ -17,6 +17,17 @@ const DICCIONARIO = {
 
 const HORAS = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"];
 
+// FRASES ALEATORIAS PARA EL SISTEMA
+const FRASES_SISTEMA = [
+    "🔥 Los datos muestran una fuerte tendencia. ¡El historial está de tu lado!",
+    "🧐 Patrones interesantes detectados hoy. El anclaje se está ajustando.",
+    "⚓ La memoria histórica vibra fuerte. Buenas probabilidades en puerta.",
+    "🧊 La paciencia es clave; los enjaulados podrían romper su ciclo pronto.",
+    "⚖️ El algoritmo ha compensado las desviaciones. Proyecciones equilibradas.",
+    "🚀 ¡Energía alta en el pool caliente! La racha matemática continúa.",
+    "🔍 Cruzando datos pasados con resultados de hoy... ¡Análisis completado!"
+];
+
 let BaseDatos = {}; 
 let ModeloPesos = { anclaje: 100, secuencial: 50, pool: 30, enjaulado: 10, totalRevisiones: 0, aciertos: 0 };
 
@@ -77,9 +88,6 @@ function cargarDiaEspecifico(fecha) {
     });
 }
 
-// ==========================================
-// GUARDADO PERSISTENTE Y RETROALIMENTACIÓN
-// ==========================================
 document.getElementById('btnGuardarDia').addEventListener('click', () => {
     const fecha = fechaCarga.value;
     if(!fecha) return;
@@ -99,9 +107,6 @@ document.getElementById('btnGuardarDia').addEventListener('click', () => {
     alert(`🎉 Resultados del día ${fecha.split('-').reverse().join('/')} guardados perfectamente.`);
 });
 
-// ==========================================
-// UX SEGURA A PRUEBA DE ERRORES
-// ==========================================
 document.addEventListener('input', (e) => {
     if (e.target.classList.contains('js-num-input')) {
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
@@ -127,9 +132,6 @@ function normalizarNumero(val) {
     return (num >= 1 && num <= 75) ? num.toString() : null;
 }
 
-// ==========================================
-// MOTOR MATEMÁTICO: ALGORITMO CON PREDICTIVO EN VIVO
-// ==========================================
 document.getElementById('btnGenerar').addEventListener('click', () => {
     try {
         const fechaActual = fechaCarga.value;
@@ -143,7 +145,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         let universo = ["0", "00"];
         for(let i=1; i<=75; i++) universo.push(i.toString());
 
-        // 1. EXTRAER VALORES ACTUALES EN PANTALLA
         let numsHoyEnPantalla = [];
         HORAS.forEach((_, i) => {
             let val = document.getElementById(`hora-inp-${i}`).value.trim();
@@ -153,7 +154,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         });
 
-        // 2. OBTENER POOL CALIENTE
         let diasFiltrados = fechasOrdenadas.filter(f => f < fechaActual);
         if(diasFiltrados.length === 0) diasFiltrados = [...fechasOrdenadas]; 
         
@@ -165,7 +165,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
         let poolCaliente = [...new Set(ultimosNums)].sort((a,b) => freq48[b] - freq48[a]);
 
-        // 3. ALGORITMO DE ANCLAJE EN VIVO
         let numerosAncladosMatch = [];
         if (numsHoyEnPantalla.length > 0) {
             let soloNumerosHoy = numsHoyEnPantalla.map(x => x.num);
@@ -191,7 +190,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         poolAnclajeFinal.forEach(n => freqAnclaje[n] = (freqAnclaje[n] || 0) + 1);
         poolAnclajeFinal = [...new Set(poolAnclajeFinal)].sort((a,b) => freqAnclaje[b] - freqAnclaje[a]);
 
-        // 4. ENJAULADOS GENERALES DEL MES
         let todosLosVistos = [];
         fechasOrdenadas.forEach(f => {
             if(f !== fechaActual) {
@@ -206,7 +204,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         let setVistos = new Set(todosLosVistos);
         let enjaulados = universo.filter(n => !setVistos.has(n));
 
-        // 5. CADENA DE TRANSICIONES
         let transiciones = {};
         for (let i = 0; i < todosLosVistos.length - 1; i++) {
             let act = todosLosVistos[i];
@@ -215,7 +212,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             transiciones[act].push(sig);
         }
 
-        // 6. ASIGNACIÓN DINÁMICA DE PESOS
         let pesos = {};
         
         poolAnclajeFinal.forEach((n, i) => {
@@ -242,31 +238,32 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
 
         localStorage.setItem(`predicciones_${selectLoteria.value}_${fechaActual}`, JSON.stringify(sugerencias.slice(0, 5)));
 
-        // ==========================================
-        // RENDERIZADO CON TEXTOS VISIBLES Y SEGUROS
-        // ==========================================
         const fName = (n) => `[${n.padStart(2,'0')}] ${DICCIONARIO[n] || 'Animal'}`;
+
+        // GENERAR FRASE ALEATORIA
+        const fraseRandom = FRASES_SISTEMA[Math.floor(Math.random() * FRASES_SISTEMA.length)];
+        document.getElementById('frase-analisis-container').innerText = `"${fraseRandom}"`;
 
         let porcEficiencia = ModeloPesos.totalRevisiones > 0 ? Math.round((ModeloPesos.aciertos / ModeloPesos.totalRevisiones) * 100) : 100;
         document.getElementById('txt-eficiencia').innerText = `${porcEficiencia}%`;
         document.getElementById('txt-aprendizaje-log').innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones del mes. Peso de Anclaje adaptativo: ${ModeloPesos.anclaje}pts.`;
 
-        // Tarjetas Principales (Cambiado color de texto a verdes oscuros legibles en vez de la variable clara)
+        // TARJETAS CON TEMPERATURA DINÁMICA
         document.getElementById('tarjetas-prediccion-container').innerHTML = `
-            <div class="tarjeta-prediccion">
-                <div class="pred-info"><h4>${fName(sugerencias[0])}</h4><p>Fuerza Máxima Predictiva para el resto del día</p></div>
-                <div class="pred-porcentaje" style="color: #2e7d32;">${Math.min(92 + porcEficiencia/50, 99).toFixed(0)}%</div>
+            <div class="tarjeta-prediccion temp-caliente">
+                <div class="pred-info"><h4>${fName(sugerencias[0])}</h4><p>Fuerza Máxima Predictiva (Hot Pool)</p></div>
+                <div class="pred-porcentaje">${Math.min(92 + porcEficiencia/50, 99).toFixed(0)}%</div>
             </div>
-            <div class="tarjeta-prediccion">
-                <div class="pred-info"><h4>${fName(sugerencias[1])}</h4><p>Siguiente en Cadena de Transición</p></div>
-                <div class="pred-porcentaje" style="color: #2e7d32;">86%</div>
+            <div class="tarjeta-prediccion temp-tibia">
+                <div class="pred-info"><h4>${fName(sugerencias[1])}</h4><p>Siguiente en Cadena de Transición (Warm)</p></div>
+                <div class="pred-porcentaje">86%</div>
             </div>
-            <div class="tarjeta-prediccion">
+            <div class="tarjeta-prediccion ${poolAnclajeFinal.length > 0 ? 'temp-caliente' : 'temp-fria'}">
                 <div class="pred-info">
                     <h4>${fName(poolAnclajeFinal[0] || enjaulados[0] || sugerencias[2])}</h4>
-                    <p>${poolAnclajeFinal.length > 0 ? 'Fuerza de Anclaje de Sorteos de Hoy' : 'Compensación Crítica (Enjaulado)'}</p>
+                    <p>${poolAnclajeFinal.length > 0 ? 'Fuerza de Anclaje de Hoy' : 'Compensación Crítica (Enjaulado / Cold)'}</p>
                 </div>
-                <div class="pred-porcentaje" style="color:${poolAnclajeFinal.length > 0 ? '#2e7d32' : 'var(--rojo-alerta)'}">
+                <div class="pred-porcentaje">
                     ${poolAnclajeFinal.length > 0 ? '83%' : '74%'}
                 </div>
             </div>
@@ -274,7 +271,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
 
         document.getElementById('pool-badges').innerHTML = poolCaliente.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('');
         
-        // Renderizado del bloque informativo de anclaje
         const txtAnclaje = document.getElementById('txt-anclaje-info');
         const badgesAnclaje = document.getElementById('anclaje-badges');
         if (txtAnclaje && badgesAnclaje) {
@@ -287,7 +283,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         }
 
-        // Renderizado seguro de enjaulados (en caso de que exista el contenedor en el HTML)
         const badgesEnjaulados = document.getElementById('enjaulados-badges');
         const alertaEnjaulados = document.getElementById('alerta-enjaulados');
         if (badgesEnjaulados) badgesEnjaulados.innerHTML = enjaulados.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Tablero limpio</div>';
@@ -300,7 +295,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         });
         document.getElementById('tablero-grid').innerHTML = tableroHTML;
 
-        // CRONOGRAMA INTELIGENTE
         let cronoHTML = '';
         HORAS.forEach((h, i) => {
             let inputVal = document.getElementById(`hora-inp-${i}`).value.trim();

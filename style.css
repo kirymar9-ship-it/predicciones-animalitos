@@ -153,14 +153,14 @@ select:focus, input:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 35px 0 15px 0;
+    margin: 55px 0 65px 0;
 }
 
 .btn-guardar {
     background-color: var(--azul-guardar);
     color: white;
     border: none;
-    padding: 10px 18px;
+    padding: 20px 28px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
