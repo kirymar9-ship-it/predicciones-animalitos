@@ -1,7 +1,7 @@
 /* ==========================================
    NUEVA PALETA DE COLORES (TEMA CLARO)
    ========================================== */
-   :root {
+:root {
     --bg-app: #fff1e8; 
     --bg-tarjeta: #fbe3e3; 
     --bg-input: #ffffff; 
@@ -10,7 +10,7 @@
     --verde-brand: #a7d49b; 
     --verde-hover: #8fbc8f; 
     
-    --texto-principal: #000000; 
+    --texto-principal: #231f1c; /* Cambiado a un gris oscuro suave muy legible */
     --texto-secundario: #444444; 
     
     --rojo-alerta: #dc2626; 
@@ -30,9 +30,9 @@ body {
     background-color: var(--bg-app);
     color: var(--texto-principal);
     padding: 10px;
-    padding-bottom: 40px; 
+    padding-bottom: 30px; 
     line-height: 1.6;
-    font-size: 17px; /* Aumentado */
+    font-size: 16px; /* Aumentado */
 }
 
 .top-bar {
@@ -64,12 +64,12 @@ body {
 .contenedor-principal {
     max-width: 650px;
     margin: 0 auto;
-    padding: 30px 25px;
+    padding: 20px 15px;
 }
 
 /* TÍTULO ROSA METÁLICO */
 .titulo-app { 
-    font-size: 56px; /* Letra mucho más grande */
+    font-size: 36px; /* Letra mucho más grande */
     margin-bottom: 5px; 
     text-align: center;
     font-weight: 900;
@@ -81,12 +81,17 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
+/* SUBTÍTULO CON EFECTO NEÓN ROSA */
 .subtitulo { 
-    color: var(--texto-secundario); 
+    color: #ffffff; /* Centro blanco para simular el tubo de gas neón */
+    text-shadow: 
+        0 0 5px #ffffff, 
+        0 0 10px #ff4081, 
+        0 0 20px #ff4081; /* Resplandor brillante */
     font-size: 16px; /* Aumentado */
     margin-bottom: 30px; 
     text-align: center;
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .seccion-titulo { 
@@ -354,6 +359,15 @@ select:focus, input:focus {
 }
 .crono-hora { color: var(--texto-secundario); font-weight: 600; }
 .cronograma-item strong { color: var(--texto-principal); font-size: 16px; }
+
+/* NUEVA CLASE INDEPENDIENTE PARA UN TEXTO METÁLICO DORADO EXTRA */
+.texto-dorado-metalico {
+    background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
 
 @media (max-width: 480px) {
     .grid-horas { grid-template-columns: repeat(2, 1fr); }
