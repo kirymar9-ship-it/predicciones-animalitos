@@ -8,18 +8,19 @@
 </head>
 <body>
     <header class="top-bar">
-        <div class="logo-placeholder">📊</div> 
+        <div class="logo-placeholder">📊</div>
         <div class="user-info">
             <span class="saldo-badge">440,00 VES 🇻🇪</span>
             <div class="avatar">👤</div>
         </div>
     </header>
 
-    <div class="contenedor-principal">
+    <main class="contenedor-principal">
         <h1 class="titulo-app">Resultados de Animalitos</h1>
-        <p class="subtitulo">Sistema con Memoria Histórica y Aprendizaje Automático</p>
+        <h2 class="subtitulo">Sistema con Memoria Histórica y Aprendizaje Automático</h2>
 
-        <section class="tarjeta panel-configuracion">
+        <section class="tarjeta panel-configuracion" aria-labelledby="config-titulo">
+            <h3 id="config-titulo" class="seccion-titulo" style="margin-top:0">⚙️ Configuración</h3>
             <div class="grupo-control">
                 <label for="select-loteria">Sorteo a analizar</label>
                 <select id="select-loteria">
@@ -33,25 +34,24 @@
                 <label for="fecha-carga">Fecha para Cargar/Editar Resultados</label>
                 <input type="date" id="fecha-carga">
             </div>
-            <div id="db-status" class="status-badge mt-15">Historial: 0 días registrados</div>
+            <div id="db-status" class="status-badge mt-15" aria-live="polite">Historial: 0 días registrados</div>
+            <p id="dias-disponibles-info" class="resumen-indicador" style="margin-top:10px; display:none;"></p>
         </section>
 
-        <section class="panel-datos" id="panel-datos-dia" style="display: none;">
+        <section id="panel-datos-dia" style="display: none;" aria-labelledby="titulo-fecha-activa">
             <div class="header-seccion-datos">
-                <h2 class="seccion-titulo" id="titulo-fecha-activa">Resultados del Día</h2>
+                <h2 id="titulo-fecha-activa" class="seccion-titulo" style="margin:0">Resultados del Día</h2>
                 <button id="btnGuardarDia" class="btn-guardar">💾 Guardar Día</button>
             </div>
-            
+
             <div class="grid-horas" id="grid-horas-inputs"></div>
 
             <button id="btnGenerar" class="btn-verde">GENERAR ANÁLISIS Y PREDICCIÓN</button>
         </section>
 
-        <section class="panel-resultados" id="panelResultados" style="display: none;">
-            <h2 class="seccion-titulo text-center">PANEL DE RESULTADOS 🚀</h2>
-            
-            <div id="frase-analisis-container" class="frase-analisis"></div>
-            
+        <section id="panelResultados" style="display: none;" aria-labelledby="resultados-titulo">
+            <h2 id="resultados-titulo" class="seccion-titulo text-center">PANEL DE RESULTADOS 🚀</h2>
+
             <div class="tarjeta indicador-aprendizaje">
                 <div class="aprendizaje-header">
                     <span>🧠 Eficiencia del Modelo IA</span>
@@ -84,7 +84,10 @@
                 <div class="grid-cronograma-horas" id="cronograma-horas-container"></div>
             </div>
         </section>
-    </div>
+
+        <!-- Toast de notificación no intrusivo -->
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
 
     <script src="app.js"></script>
 </body>

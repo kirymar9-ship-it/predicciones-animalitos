@@ -2,20 +2,23 @@
    NUEVA PALETA DE COLORES (TEMA CLARO)
    ========================================== */
 :root {
-    --bg-app: #fff1e8; 
-    --bg-tarjeta: #fbe3e3; 
-    --bg-input: #ffffff; 
-    --borde-color: #e0d0c5; 
-    
-    --verde-brand: #a7d49b; 
-    --verde-hover: #8fbc8f; 
-    
-    --texto-principal: #231f1c; /* Cambiado a un gris oscuro suave muy legible */
-    --texto-secundario: #444444; 
-    
-    --rojo-alerta: #dc2626; 
-    --azul-guardar: #2563eb; 
+    --bg-app: #fff1e8;
+    --bg-tarjeta: #fbe3e3;
+    --bg-input: #ffffff;
+    --borde-color: #e0d0c5;
+
+    --verde-brand: #a7d49b;
+    --verde-hover: #8fbc8f;
+
+    --texto-principal: #231f1c;
+    --texto-secundario: #444444;
+
+    --rojo-alerta: #dc2626;
+    --azul-guardar: #2563eb;
     --azul-hover: #1d4ed8;
+
+    --pred-verde: #2e7d32;
+    --pred-rojo: #dc2626;
 }
 
 * {
@@ -25,21 +28,20 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
-/* FUENTES MÁS GRANDES EN EL BODY */
 body {
     background-color: var(--bg-app);
     color: var(--texto-principal);
-    padding: 20px;
-    padding-bottom: 40px; 
+    padding: 10px;
+    padding-bottom: 30px;
     line-height: 1.6;
-    font-size: 26px; /* Aumentado */
+    font-size: 16px;
 }
 
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 25px 30px;
+    padding: 15px 20px;
     background-color: var(--bg-app);
     position: sticky;
     top: 0;
@@ -47,14 +49,14 @@ body {
     border-bottom: 1px solid var(--borde-color);
 }
 
-.logo-placeholder { font-size: 34px; }
+.logo-placeholder { font-size: 24px; }
 
 .saldo-badge {
     background-color: var(--bg-tarjeta);
     color: var(--texto-principal);
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 15px; /* Aumentado */
+    font-size: 15px;
     font-weight: bold;
     border: 1px solid var(--borde-color);
 }
@@ -68,9 +70,9 @@ body {
 }
 
 /* TÍTULO ROSA METÁLICO */
-.titulo-app { 
-    font-size: 36px; /* Letra mucho más grande */
-    margin-bottom: 5px; 
+.titulo-app {
+    font-size: 36px;
+    margin-bottom: 5px;
     text-align: center;
     font-weight: 900;
     background: linear-gradient(to right, #d81b60, #ff4081, #f50057, #d81b60);
@@ -81,23 +83,23 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-/* SUBTÍTULO CON EFECTO NEÓN ROSA */
-.subtitulo { 
-    color: #ffffff; /* Centro blanco para simular el tubo de gas neón */
-    text-shadow: 
-        0 0 5px #ffffff, 
-        0 0 10px #ff4081, 
-        0 0 20px #ff4081; /* Resplandor brillante */
-    font-size: 16px; /* Aumentado */
-    margin-bottom: 30px; 
+/* SUBTÍTULO CON EFECTO NEÓN ROSA (mejor legibilidad) */
+.subtitulo {
+    color: #d81b60;
+    text-shadow:
+        0 0 5px rgba(255,255,255,0.9),
+        0 0 10px #ff4081,
+        0 0 20px #ff4081;
+    font-size: 16px;
+    margin-bottom: 30px;
     text-align: center;
     font-weight: bold;
 }
 
-.seccion-titulo { 
-    font-size: 20px; /* Aumentado */
-    margin: 30px 0 15px 0; 
-    color: var(--texto-principal); 
+.seccion-titulo {
+    font-size: 20px;
+    margin: 30px 0 15px 0;
+    color: var(--texto-principal);
     font-weight: bold;
 }
 
@@ -107,24 +109,24 @@ body {
 .tarjeta {
     background-color: var(--bg-tarjeta);
     border-radius: 12px;
-    padding: 25px; 
+    padding: 25px;
     border: 1px solid var(--borde-color);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
 
 .tarjeta h3 {
-    font-size: 18px; /* Aumentado */
+    font-size: 18px;
     margin-bottom: 12px;
     color: var(--texto-principal);
 }
 
-.grupo-control label { 
-    display: block; 
-    font-size: 15px; /* Aumentado */
-    color: var(--texto-principal); 
+.grupo-control label {
+    display: block;
+    font-size: 15px;
+    color: var(--texto-principal);
     font-weight: 600;
-    margin-bottom: 8px; 
+    margin-bottom: 8px;
 }
 
 select, input[type="date"], input[type="text"] {
@@ -132,15 +134,15 @@ select, input[type="date"], input[type="text"] {
     background-color: var(--bg-input);
     border: 1px solid var(--borde-color);
     color: var(--texto-principal);
-    padding: 14px 15px; /* Más gorditos */
+    padding: 14px 15px;
     border-radius: 8px;
-    font-size: 16px; /* Aumentado */
+    font-size: 16px;
     outline: none;
     transition: border-color 0.2s;
 }
 
-select:focus, input:focus { 
-    border-color: var(--verde-hover); 
+select:focus, input:focus {
+    border-color: var(--verde-hover);
     box-shadow: 0 0 0 3px rgba(167, 212, 155, 0.2);
 }
 
@@ -162,16 +164,15 @@ select:focus, input:focus {
     margin: 35px 0 15px 0;
 }
 
-/* BOTÓN GUARDAR MÁS VISTOSO */
 .btn-guardar {
     background-color: var(--azul-guardar);
     color: white;
     border: none;
-    padding: 14px 22px; /* Más grande */
+    padding: 14px 22px;
     border-radius: 10px;
     font-weight: bold;
     cursor: pointer;
-    font-size: 16px; /* Aumentado */
+    font-size: 16px;
     transition: background 0.2s, transform 0.1s;
     box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
@@ -192,31 +193,30 @@ select:focus, input:focus {
     border: 1px solid var(--borde-color);
 }
 
-.hora-label { 
-    display: block; 
-    font-size: 13px; /* Aumentado */
-    color: var(--texto-secundario); 
-    margin-bottom: 6px; 
+.hora-label {
+    display: block;
+    font-size: 13px;
+    color: var(--texto-secundario);
+    margin-bottom: 6px;
     font-weight: bold;
 }
 
-.hora-input { 
-    text-align: center; 
-    font-size: 22px; /* Aumentado y más visible */
-    font-weight: bold; 
-    padding: 12px; 
+.hora-input {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 12px;
     background-color: #fff;
 }
 
-/* BOTÓN GENERAR MÁS GRANDE Y LLAMATIVO */
 .btn-verde {
     width: 100%;
     background: linear-gradient(135deg, #a7d49b, #8fbc8f);
-    color: #000000; 
+    color: #000000;
     border: none;
-    padding: 22px; /* Mucho más grande */
+    padding: 22px;
     border-radius: 12px;
-    font-size: 18px; /* Aumentado */
+    font-size: 18px;
     font-weight: 900;
     letter-spacing: 1px;
     margin-top: 25px;
@@ -233,7 +233,6 @@ select:focus, input:focus {
     border-top: 2px dashed var(--borde-color);
 }
 
-/* NUEVO: ESTILO PARA LA FRASE DE ANÁLISIS */
 .frase-analisis {
     background-color: rgba(255, 255, 255, 0.8);
     border: 1px dashed var(--verde-brand);
@@ -242,7 +241,7 @@ select:focus, input:focus {
     text-align: center;
     font-style: italic;
     font-size: 16px;
-    color: #2e7d32;
+    color: var(--pred-verde);
     margin-bottom: 20px;
     font-weight: 600;
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
@@ -259,18 +258,17 @@ select:focus, input:focus {
     font-weight: bold;
 }
 .porcentaje-ia {
-    color: #2e7d32; 
+    color: var(--pred-verde);
     font-size: 20px;
 }
 
-.grid-predicciones { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    margin-bottom: 25px; 
+.grid-predicciones {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
-/* TARJETAS DE PREDICCIÓN BASE Y TEMPERATURAS */
 .tarjeta-prediccion {
     background-color: #fff;
     border: 1px solid var(--borde-color);
@@ -285,7 +283,9 @@ select:focus, input:focus {
 .pred-info p { color: var(--texto-secundario); font-size: 14px; margin-top: 4px; }
 .pred-porcentaje { font-weight: 900; font-size: 22px; }
 
-/* Temperaturas dinámicas */
+.pred-verde { color: var(--pred-verde); }
+.pred-rojo { color: var(--pred-rojo); }
+
 .temp-caliente { border-left: 6px solid #e11d48; background: linear-gradient(to right, #fff1f2, #ffffff); }
 .temp-caliente .pred-porcentaje { color: #e11d48; }
 
@@ -295,11 +295,11 @@ select:focus, input:focus {
 .temp-fria { border-left: 6px solid #0284c7; background: linear-gradient(to right, #f0f9ff, #ffffff); }
 .temp-fria .pred-porcentaje { color: #0284c7; }
 
-.grid-indicators-dos-columnas { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 15px; 
-    margin-bottom: 20px; 
+.grid-indicators-dos-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 .resumen-indicador { font-size: 14px; color: var(--texto-secundario); margin-bottom: 12px; }
 
@@ -328,24 +328,24 @@ select:focus, input:focus {
     border-radius: 6px;
     font-size: 14px;
     font-weight: bold;
-    color: #888; 
+    color: #888;
 }
-.celda-tablero.activa { 
-    background-color: rgba(167, 212, 155, 0.2); 
-    color: #2e7d32; 
-    border-color: var(--verde-brand); 
+.celda-tablero.activa {
+    background-color: rgba(167, 212, 155, 0.2);
+    color: var(--pred-verde);
+    border-color: var(--verde-brand);
 }
-.celda-tablero.fria { 
-    background-color: rgba(220, 38, 38, 0.08); 
-    color: var(--rojo-alerta); 
+.celda-tablero.fria {
+    background-color: rgba(220, 38, 38, 0.08);
+    color: var(--rojo-alerta);
     border-color: rgba(220, 38, 38, 0.2);
 }
 
-.grid-cronograma-horas { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 12px; 
-    margin-top: 15px; 
+.grid-cronograma-horas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 15px;
 }
 .cronograma-item {
     background-color: #fff;
@@ -360,13 +360,33 @@ select:focus, input:focus {
 .crono-hora { color: var(--texto-secundario); font-weight: 600; }
 .cronograma-item strong { color: var(--texto-principal); font-size: 16px; }
 
-/* NUEVA CLASE INDEPENDIENTE PARA UN TEXTO METÁLICO DORADO EXTRA */
 .texto-dorado-metalico {
     background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     display: inline-block;
+}
+
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--texto-principal);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 15px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 999;
+}
+.toast.mostrar {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 @media (max-width: 480px) {
