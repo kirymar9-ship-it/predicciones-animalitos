@@ -404,10 +404,9 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             });
         }
 
-        // 8. FILTRADO POR UMBRAL DE CONFIANZA
-        let pesosArray = Object.values(pesos);
-        let pesoMaximo = Math.max(...pesosArray, 1);
-        let umbralConfianza = pesoMaximo * 0.7;
+        // 8. FILTRADO POR UMBRAL DE CONFIANZA Y DEFINICIÓN DE SUGERENCIAS GENERALES
+        // CORRECCIÓN: Definimos sugerencias en el bloque principal para que el cronograma la use libremente
+        const sugerencias = Object.keys(pesos).sort((a, b) => pesos[b] - pesos[a]);
 
         let prediccionesFuertes = Object.keys(pesos)
             .filter(n => pesos[n] >= umbralConfianza)
@@ -415,7 +414,6 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
 
         if (prediccionesFuertes.length === 0) {
             // Fallback: top 3 de sugerencias generales
-            let sugerencias = Object.keys(pesos).sort((a, b) => pesos[b] - pesos[a]);
             prediccionesFuertes = sugerencias.slice(0, 3);
         } else {
             prediccionesFuertes = prediccionesFuertes.slice(0, 4);
@@ -471,7 +469,7 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         if (txtAnclaje && badgesAnclaje) {
             if (numsHoyEnPantalla.length > 0) {
                 txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) hoy para cruce dinámico.`;
-                badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando coincidencias...</div>';
+                badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando modificaciones...</div>';
             } else {
                 txtAnclaje.innerText = "Introduce al menos un resultado de hoy para activar.";
                 badgesAnclaje.innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
@@ -481,36 +479,34 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
         // ==========================================
         // RENDERIZADO MEJORADO CON LÓGICA PREDICTIVA
         // ==========================================
-        
+       
         // 1. Enjaulados y Mapa de Calor (Con protección de existencia)
         const tableroGrid = document.getElementById('tablero-grid');
         if (tableroGrid) {
             let tableroHTML = '';
             universo.forEach(n => {
-                // Mantiene el estilo según si el número ya ha sido visto en el mes
                 let extraClass = setVistos.has(n) ? 'activa' : 'fria';
                 tableroHTML += `<div class="celda-tablero ${extraClass}">${n === '00' ? '00' : n.padStart(2,'0')}</div>`;
             });
             tableroGrid.innerHTML = tableroHTML;
         }
 
-        // 2. Cronograma de horas INTELIGENTE (Fusión de ambos códigos)
+        // 2. Cronograma de horas INTELIGENTE
         const cronoContainer = document.getElementById('cronograma-horas-container');
         if (cronoContainer) {
             let cronoHTML = '';
             HORAS.forEach((h, i) => {
                 let inputVal = document.getElementById(`hora-inp-${i}`).value.trim();
                 let normInput = normalizarNumero(inputVal);
-                
+               
                 if (normInput) {
-                    // Si ya salió, muestra el resultado real con el diseño nuevo
                     cronoHTML += `
                         <div class="cronograma-item" style="border-left: 4px solid var(--azul-guardar); background-color: rgba(37, 99, 235, 0.05)">
                             <span class="crono-hora">${h}</span>
                             <strong>✅ ${fName(normInput)}</strong>
                         </div>`;
                 } else {
-                    // SI ESTÁ VACÍO: Activa el cerebro predictivo viejo en la interfaz nueva 🧠🔮
+                    // Ahora sí encuentra la lista de sugerencias sin explotar 🔮
                     let fav = sugerencias[i % sugerencias.length];
                     cronoHTML += `
                         <div class="cronograma-item">
@@ -522,12 +518,12 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             cronoContainer.innerHTML = cronoHTML;
         }
 
-        // 3. Flujo de finalización limpio (Nuevo)
+        // 3. Flujo de finalización limpio
         if (document.getElementById('panelResultados')) {
             document.getElementById('panelResultados').style.display = 'block';
             window.scrollTo({ top: document.getElementById('panelResultados').offsetTop, behavior: 'smooth' });
         }
-        
+       
         mostrarToast("✅ Análisis generado con éxito.");
 
     } catch (error) {
