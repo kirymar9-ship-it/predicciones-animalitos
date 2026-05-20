@@ -478,5 +478,42 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         }
 
-        // Enjaulados
+        // Enjaulados y Mapa de Calor
+        const tableroGrid = document.getElementById('tablero-grid');
+        if (tableroGrid) {
+            let tableroHTML = '';
+            universo.forEach(n => {
+                let extraClass = setVistos.has(n) ? 'activa' : 'fria';
+                tableroHTML += `<div class="celda-tablero ${extraClass}">${n}</div>`;
+            });
+            tableroGrid.innerHTML = tableroHTML;
+        }
+
+        // Cronograma de horas
+        const cronoContainer = document.getElementById('cronograma-horas-container');
+        if (cronoContainer) {
+            let cronoHTML = '';
+            HORAS.forEach((h, i) => {
+                let valHoy = document.getElementById(`hora-inp-${i}`).value.trim();
+                let texto = valHoy ? `Salió: ${valHoy}` : `Pendiente...`;
+                cronoHTML += `
+                    <div class="cronograma-item">
+                        <span class="crono-hora">${h}</span>
+                        <strong>${texto}</strong>
+                    </div>`;
+            });
+            cronoContainer.innerHTML = cronoHTML;
+        }
+
+        // Mostrar el panel de resultados al finalizar
+        document.getElementById('panelResultados').style.display = 'block';
+        mostrarToast("✅ Análisis generado con éxito.");
+
+    } catch (error) {
+        console.error("Error al generar el análisis:", error);
+        mostrarToast("❌ Ocurrió un error en el motor matemático.");
+    }
+});
+
+
    
