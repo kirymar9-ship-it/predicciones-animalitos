@@ -83,7 +83,7 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
-/* SUBTÍTULO CON EFECTO NEÓN ROSA (mejor legibilidad) */
+/* SUBTÍTULO CON EFECTO NEÓN ROSA */
 .subtitulo {
     color: #d81b60;
     text-shadow:
@@ -314,9 +314,13 @@ select:focus, input:focus {
     font-weight: bold;
 }
 
+/* ==========================================
+   TABLERO DINÁMICO AUTOADAPTABLE (OPTIMIZADO)
+   ========================================== */
 .tablero-grid {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    /* Calcula las columnas automáticamente según el ancho disponible en pantalla */
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
     gap: 6px;
     margin-top: 15px;
 }
@@ -329,12 +333,15 @@ select:focus, input:focus {
     font-size: 14px;
     font-weight: bold;
     color: #888;
+    transition: all 0.2s ease-in-out;
 }
+/* Estilo para los animalitos que han salido con alta frecuencia */
 .celda-tablero.activa {
-    background-color: rgba(167, 212, 155, 0.2);
-    color: var(--pred-verde);
-    border-color: var(--verde-brand);
+    background-color: rgba(37, 99, 235, 0.12);
+    color: var(--azul-guardar);
+    border-color: var(--azul-guardar);
 }
+/* Estilo para los animalitos fríos o que no han salido */
 .celda-tablero.fria {
     background-color: rgba(220, 38, 38, 0.08);
     color: var(--rojo-alerta);
@@ -389,9 +396,11 @@ select:focus, input:focus {
     pointer-events: auto;
 }
 
+/* Ajustes responsivos para pantallas móviles */
 @media (max-width: 480px) {
     .grid-horas { grid-template-columns: repeat(2, 1fr); }
     .grid-cronograma-horas { grid-template-columns: 1fr; }
+    .grid-indicators-dos-columnas { grid-template-columns: 1fr; }
     .tarjeta { padding: 20px; }
     .titulo-app { font-size: 28px; }
 }

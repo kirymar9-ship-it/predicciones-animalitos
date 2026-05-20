@@ -8,14 +8,15 @@ const DICCIONARIO = {
     "17": "Pavo", "18": "Burro", "19": "Chivo", "20": "Cochino", "21": "Gallo", "22": "Camello",
     "23": "Cebra", "24": "Iguana", "25": "Gallina", "26": "Vaca", "27": "Perro", "28": "Zamuro",
     "29": "Elefante", "30": "Caimán", "31": "Lapa", "32": "Ardilla", "33": "Pescado", "34": "Venado",
-    "35": "Jirafa", "36": "Culebra", "37": "Tortuga", "38": "Búfalo", "39": "Lechuza", "40": "Avispa",
-    "41": "Canguro", "42": "Tucán", "43": "Mariposa", "44": "Chigüire", "45": "Garza", "46": "Puma",
-    "47": "Pavo Real", "48": "Puercoespín", "49": "Pereza", "50": "Canario", "51": "Pelícano",
-    "52": "Pulpo", "53": "Caracol", "54": "Grillo", "55": "Oso hormiguero", "56": "Tiburón",
-    "57": "Pato", "58": "Hormiga", "59": "Pantera", "60": "Camaleón", "61": "Danta",
-    "62": "Cachicamo", "63": "Cangrejo", "64": "Gavilán", "65": "Araña", "66": "Lobo",
-    "67": "Avestruz", "68": "Jaguar", "69": "Conejo", "70": "Bisonte", "71": "Guacamaya",
-    "72": "Gorila", "73": "Hipopótamo", "74": "Turpial", "75": "Guácharo"
+    "35": "Jirafa", "36": "Culebra", 
+    // Los siguientes solo se usarán si la lotería activa es el Guácharo
+    "37": "Tortuga", "38": "Búfalo", "39": "Lechuza", "40": "Avispa", "41": "Canguro", "42": "Tucán", 
+    "43": "Mariposa", "44": "Chigüire", "45": "Garza", "46": "Puma", "47": "Pavo Real", "48": "Puercoespín", 
+    "49": "Pereza", "50": "Canario", "51": "Pelícano", "52": "Pulpo", "53": "Caracol", "54": "Grillo", 
+    "55": "Oso hormiguero", "56": "Tiburón", "57": "Pato", "58": "Hormiga", "59": "Pantera", "60": "Camaleón", 
+    "61": "Danta", "62": "Cachicamo", "63": "Cangrejo", "64": "Gavilán", "65": "Araña", "66": "Lobo",
+    "67": "Avestruz", "68": "Jaguar", "69": "Conejo", "70": "Bisonte", "71": "Guacamaya", "72": "Gorila", 
+    "73": "Hipopótamo", "74": "Turpial", "75": "Guácharo"
 };
 
 const HORAS = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"];
@@ -25,6 +26,18 @@ let ModeloPesos = { anclaje: 100, secuencial: 50, pool: 30, enjaulado: 10, total
 
 const selectLoteria = document.getElementById('select-loteria');
 const fechaCarga = document.getElementById('fecha-carga');
+
+// ==========================================
+// CONTROLADOR DE LÍMITES POR LOTERÍA
+// ==========================================
+function obtenerLimiteLoteria() {
+    const loteriaActiva = selectLoteria ? selectLoteria.value.toLowerCase() : 'lotto-activo';
+    // Si la selección incluye "guacharo", permitimos hasta el 75, de lo contrario, el límite es 36.
+    if (loteriaActiva.includes('guacharo')) {
+        return 75;
+    }
+    return 36;
+}
 
 // ==========================================
 // TOAST SYSTEM
@@ -39,7 +52,7 @@ function mostrarToast(mensaje, duracion = 3000) {
 }
 
 // ==========================================
-// INICIALIZACIÓN CORREGIDA (DOMContentLoaded)
+// INICIALIZACIÓN
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     cargarBaseDatos();
@@ -60,6 +73,11 @@ if (selectLoteria) {
     selectLoteria.addEventListener('change', () => {
         cargarBaseDatos();
         actualizarEstadoDB();
+        // Limpiar inputs si se cambia de lotería para evitar números fuera de rango
+        HORAS.forEach((_, i) => {
+            const inputElement = document.getElementById(`hora-inp-${i}`);
+            if (inputElement) inputElement.value = "";
+        });
         if (fechaCarga && fechaCarga.value) cargarDiaEspecifico(fechaCarga.value);
     });
 }
@@ -173,7 +191,7 @@ function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
 }
 
 // ==========================================
-// VALIDACIÓN DE ENTRADA (CORREGIDA)
+// VALIDACIÓN DE ENTRADA CON LÍMITES DINÁMICOS
 // ==========================================
 document.addEventListener('input', (e) => {
     if (e.target.classList.contains('js-num-input')) {
@@ -186,14 +204,15 @@ document.addEventListener('focusout', (e) => {
         let val = e.target.value.trim();
         if (val === '') return;
         
-        // Permitir explícitamente "0" y "00" sin alterarlos
         if (val === "0" || val === "00") return;
         
         let num = parseInt(val, 10);
-        if (!isNaN(num) && num >= 1 && num <= 75) {
+        let limiteMaximo = obtenerLimiteLoteria();
+
+        if (!isNaN(num) && num >= 1 && num <= limiteMaximo) {
             e.target.value = num < 10 ? '0' + num : num.toString();
         } else {
-            e.target.value = ''; // Solo borra si el número se sale de los parámetros (ej. 89)
+            e.target.value = ''; // Borra si el número excede el límite de la lotería (ej: 40 en Lotto Activo)
         }
     }
 });
@@ -201,7 +220,8 @@ document.addEventListener('focusout', (e) => {
 function normalizarNumero(val) {
     if (val === "00" || val === "0") return val;
     let num = parseInt(val, 10);
-    return (!isNaN(num) && num >= 1 && num <= 75) ? num.toString() : null;
+    let limiteMaximo = obtenerLimiteLoteria();
+    return (!isNaN(num) && num >= 1 && num <= limiteMaximo) ? num.toString() : null;
 }
 
 // ==========================================
@@ -236,7 +256,12 @@ function calcularCiclosRetrasados(fechasOrdenadas, universo, fechaActual) {
 }
 
 function analizarSumaHistorica(fechasOrdenadas) {
-    if (fechasOrdenadas.length < 3) return { promedio: 450, rango: 100 };
+    let limiteMaximo = obtenerLimiteLoteria();
+    // Ajustamos promedios esperados si es de 36 o de 75 animales
+    let promedioBase = limiteMaximo === 36 ? 220 : 450;
+    let rangoBase = limiteMaximo === 36 ? 50 : 100;
+
+    if (fechasOrdenadas.length < 3) return { promedio: promedioBase, rango: rangoBase };
 
     let sumas = fechasOrdenadas.map(f => {
         return (BaseDatos[f] || []).reduce((acc, n) => {
@@ -245,11 +270,11 @@ function analizarSumaHistorica(fechasOrdenadas) {
         }, 0);
     }).filter(s => s > 0);
 
-    if (sumas.length === 0) return { promedio: 450, rango: 100 };
+    if (sumas.length === 0) return { promedio: promedioBase, rango: rangoBase };
 
     let promedio = sumas.reduce((a, b) => a + b, 0) / sumas.length;
     let rango = Math.max(...sumas) - Math.min(...sumas);
-    return { promedio, rango: Math.max(rango, 80) };
+    return { promedio, rango: Math.max(rango, rangoBase) };
 }
 
 function obtenerTecnicaDominante(num, contribuciones) {
@@ -282,8 +307,10 @@ if (btnGenerar) {
                 return;
             }
 
+            // CREACIÓN DEL UNIVERSO DINÁMICO
             let universo = ["0", "00"];
-            for (let i = 1; i <= 75; i++) universo.push(i.toString());
+            let limiteMaximo = obtenerLimiteLoteria();
+            for (let i = 1; i <= limiteMaximo; i++) universo.push(i.toString());
 
             // 1. EXTRAER VALORES ACTUALES EN PANTALLA
             let numsHoyEnPantalla = [];
@@ -296,7 +323,7 @@ if (btnGenerar) {
                 }
             });
 
-            // 2. OBTENER POOL CALIENTE (últimos 2 días anteriores a hoy)
+            // 2. OBTENER POOL CALIENTE
             const fechaActualDate = new Date(fechaActual);
             let diasFiltrados = fechasOrdenadas.filter(f => new Date(f) < fechaActualDate);
             if (diasFiltrados.length === 0) {
@@ -309,7 +336,9 @@ if (btnGenerar) {
 
             let freq48 = {};
             ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
-            let poolCaliente = [...new Set(ultimosNums)].sort((a, b) => freq48[b] - freq48[a]);
+            
+            // Filtramos para asegurar que no entren números del guácharo en loterías pequeñas
+            let poolCaliente = [...new Set(ultimosNums)].filter(n => universo.includes(n)).sort((a, b) => freq48[b] - freq48[a]);
 
             // 3. ALGORITMO DE ANCLAJE EN VIVO
             let numerosAncladosMatch = [];
@@ -323,7 +352,7 @@ if (btnGenerar) {
 
                         if (compartePatron) {
                             resultadosEseDia.forEach(n => {
-                                if (n !== '' && !soloNumerosHoy.includes(n)) {
+                                if (n !== '' && !soloNumerosHoy.includes(n) && universo.includes(n)) {
                                     numerosAncladosMatch.push(n);
                                 }
                             });
@@ -341,12 +370,14 @@ if (btnGenerar) {
             let todosLosVistos = [];
             fechasOrdenadas.forEach(f => {
                 if (f !== fechaActual) {
-                    (BaseDatos[f] || []).forEach(n => { if (n !== '') todosLosVistos.push(n); });
+                    (BaseDatos[f] || []).forEach(n => { 
+                        if (n !== '' && universo.includes(n)) todosLosVistos.push(n); 
+                    });
                 }
             });
 
             numsHoyEnPantalla.forEach(item => {
-                todosLosVistos.push(item.num);
+                if (universo.includes(item.num)) todosLosVistos.push(item.num);
             });
 
             let setVistos = new Set(todosLosVistos);
@@ -374,7 +405,7 @@ if (btnGenerar) {
             let promedioPorHora = numerosRestantes > 0 ? (sumaPromedio - sumaParcialHoy) / numerosRestantes : 0;
             let rangoPorHora = rango / 12;
 
-            // 7. ASIGNACIÓN DINÁMICA DE PESOS CON CONTRIBUCIONES
+            // 7. ASIGNACIÓN DINÁMICA DE PESOS
             let pesos = {};
             let tecnicasContribucion = {};
 
@@ -392,11 +423,11 @@ if (btnGenerar) {
                 if (aporte > 0) addPeso(n, aporte, 'anclaje');
             });
 
-            // 7b. Secuencial (transiciones)
+            // 7b. Secuencial
             let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
             if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
                 transiciones[ultimoNumeroGlobal].forEach(n => {
-                    addPeso(n, ModeloPesos.secuencial, 'secuencial');
+                    if (universo.includes(n)) addPeso(n, ModeloPesos.secuencial, 'secuencial');
                 });
             }
 
@@ -428,9 +459,7 @@ if (btnGenerar) {
                 });
             }
 
-            // ==========================================
-            // 8. FILTRADO CORREGIDO
-            // ==========================================
+            // 8. FILTRADO
             let pesosArray = Object.values(pesos);
             let pesoMaximo = Math.max(...pesosArray, 1);
             let umbralConfianza = pesoMaximo * 0.7;
@@ -447,13 +476,10 @@ if (btnGenerar) {
                 prediccionesFuertes = prediccionesFuertes.slice(0, 4);
             }
 
-            // Guardar predicciones para evaluación posterior
             const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
             localStorage.setItem(`predicciones_${loteriaActiva}_${fechaActual}`, JSON.stringify(prediccionesFuertes));
 
-            // ==========================================
-            // 9. RENDERIZADO FINAL PROTEGIDO
-            // ==========================================
+          // 9. RENDERIZADO FINAL
             const fName = (n) => `[${n.padStart(2, '0')}] ${DICCIONARIO[n] || 'Animal'}`;
 
             let porcEficiencia = ModeloPesos.totalRevisiones > 0
@@ -466,7 +492,7 @@ if (btnGenerar) {
             const txtAprendizajeLog = document.getElementById('txt-aprendizaje-log');
             if (txtAprendizajeLog) txtAprendizajeLog.innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones. Peso de Anclaje: ${ModeloPesos.anclaje}pts.`;
 
-            // Tarjetas de predicción
+             // Tarjetas de predicción
             const tarjetaContainer = document.getElementById('tarjetas-prediccion-container');
             if (tarjetaContainer) {
                 let tarjetasHTML = '';
@@ -516,7 +542,7 @@ if (btnGenerar) {
                 }
             }
 
-            // Enjaulados y Mapa de Calor
+            // Mapa de calor ADAPTADO AL LÍMITE DE LA LOTERÍA
             const tableroGrid = document.getElementById('tablero-grid');
             if (tableroGrid) {
                 let tableroHTML = '';
@@ -527,7 +553,7 @@ if (btnGenerar) {
                 tableroGrid.innerHTML = tableroHTML;
             }
 
-            // Cronograma de horas INTELIGENTE
+            // Cronograma de horas
             const cronoContainer = document.getElementById('cronograma-horas-container');
             if (cronoContainer) {
                 let cronoHTML = '';
@@ -565,7 +591,9 @@ if (btnGenerar) {
 
         } catch (error) {
             console.error("Error crítico en ejecución:", error);
-            mostrarToast("❌ Ocurrió un error en el motor mattico.");
+            mostrarToast("❌ Ocurrió un error en el motor matemático.");
         }
     });
 }
+
+   
