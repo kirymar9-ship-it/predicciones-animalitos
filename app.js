@@ -31,9 +31,11 @@ const fechaCarga = document.getElementById('fecha-carga');
 // ==========================================
 function mostrarToast(mensaje, duracion = 3000) {
     const toast = document.getElementById('toast');
-    toast.textContent = mensaje;
-    toast.classList.add('mostrar');
-    setTimeout(() => toast.classList.remove('mostrar'), duracion);
+    if (toast) {
+        toast.textContent = mensaje;
+        toast.classList.add('mostrar');
+        setTimeout(() => toast.classList.remove('mostrar'), duracion);
+    }
 }
 
 // ==========================================
@@ -44,9 +46,9 @@ window.addEventListener('DOMContentLoaded', () => {
     construirGridInputs();
     actualizarEstadoDB();
 
-    // NUEVO: Muestra el panel si hay una fecha seleccionada al cargar la página
-    if (fechaCarga.value) {
-        document.getElementById('panel-datos-dia').style.display = 'block';
+    if (fechaCarga && fechaCarga.value) {
+        const panelDatos = document.getElementById('panel-datos-dia');
+        if (panelDatos) panelDatos.style.display = 'block';
         cargarDiaEspecifico(fechaCarga.value);
     }
 });
@@ -54,24 +56,29 @@ window.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // EVENTOS DE CONFIGURACIÓN
 // ==========================================
-selectLoteria.addEventListener('change', () => {
-    cargarBaseDatos();
-    actualizarEstadoDB();
-    if (fechaCarga.value) cargarDiaEspecifico(fechaCarga.value);
-});
+if (selectLoteria) {
+    selectLoteria.addEventListener('change', () => {
+        cargarBaseDatos();
+        actualizarEstadoDB();
+        if (fechaCarga && fechaCarga.value) cargarDiaEspecifico(fechaCarga.value);
+    });
+}
 
-fechaCarga.addEventListener('change', (e) => {
-    if (e.target.value) {
-        cargarDiaEspecifico(e.target.value);
-        document.getElementById('panel-datos-dia').style.display = 'block';
-    }
-});
+if (fechaCarga) {
+    fechaCarga.addEventListener('change', (e) => {
+        if (e.target.value) {
+            cargarDiaEspecifico(e.target.value);
+            const panelDatos = document.getElementById('panel-datos-dia');
+            if (panelDatos) panelDatos.style.display = 'block';
+        }
+    });
+}
 
 // ==========================================
 // FUNCIONES DE BASE DE DATOS
 // ==========================================
 function cargarBaseDatos() {
-    const loteriaActiva = selectLoteria.value;
+    const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
     const datosGuardados = localStorage.getItem(`db_animalitos_${loteriaActiva}`);
     BaseDatos = datosGuardados ? JSON.parse(datosGuardados) : {};
 
@@ -81,19 +88,23 @@ function cargarBaseDatos() {
 
 function actualizarEstadoDB() {
     const totalDias = Object.keys(BaseDatos).length;
-    document.getElementById('db-status').innerText = `Historial Guardado: ${totalDias} días registrados`;
+    const dbStatus = document.getElementById('db-status');
+    if (dbStatus) dbStatus.innerText = `Historial Guardado: ${totalDias} días registrados`;
 
     const infoDias = document.getElementById('dias-disponibles-info');
-    if (totalDias < 2) {
-        infoDias.style.display = 'block';
-        infoDias.textContent = `Necesitas al menos 2 días para generar predicciones. Actualmente tienes ${totalDias}.`;
-    } else {
-        infoDias.style.display = 'none';
+    if (infoDias) {
+        if (totalDias < 2) {
+            infoDias.style.display = 'block';
+            infoDias.textContent = `Necesitas al menos 2 días para generar predicciones. Actualmente tienes ${totalDias}.`;
+        } else {
+            infoDias.style.display = 'none';
+        }
     }
 }
 
 function construirGridInputs() {
     const container = document.getElementById('grid-horas-inputs');
+    if (!container) return;
     container.innerHTML = '';
     HORAS.forEach((h, i) => {
         container.innerHTML += `
@@ -106,44 +117,51 @@ function construirGridInputs() {
 }
 
 function cargarDiaEspecifico(fecha) {
-    document.getElementById('titulo-fecha-activa').innerText = `Resultados del: ${fecha.split('-').reverse().join('/')}`;
+    const tituloFecha = document.getElementById('titulo-fecha-activa');
+    if (tituloFecha) tituloFecha.innerText = `Resultados del: ${fecha.split('-').reverse().join('/')}`;
+    
     const resultadoDia = BaseDatos[fecha] || Array(12).fill("");
     HORAS.forEach((_, i) => {
-        document.getElementById(`hora-inp-${i}`).value = resultadoDia[i] || "";
+        const inputElement = document.getElementById(`hora-inp-${i}`);
+        if (inputElement) inputElement.value = resultadoDia[i] || "";
     });
 }
 
 // ==========================================
 // GUARDADO DE DATOS Y EVALUACIÓN DE DESEMPEÑO
 // ==========================================
-document.getElementById('btnGuardarDia').addEventListener('click', () => {
-    const fecha = fechaCarga.value;
-    if (!fecha) return;
+const btnGuardarDia = document.getElementById('btnGuardarDia');
+if (btnGuardarDia) {
+    btnGuardarDia.addEventListener('click', () => {
+        const fecha = fechaCarga ? fechaCarga.value : null;
+        if (!fecha) return;
 
-    let filaResultados = [];
-    HORAS.forEach((_, i) => {
-        let val = document.getElementById(`hora-inp-${i}`).value.trim();
-        filaResultados.push(normalizarNumero(val) || "");
+        let filaResultados = [];
+        HORAS.forEach((_, i) => {
+            const inputElement = document.getElementById(`hora-inp-${i}`);
+            let val = inputElement ? inputElement.value.trim() : "";
+            filaResultados.push(normalizarNumero(val) || "");
+        });
+
+        evaluarDesempeñoPredicciones(fecha, filaResultados);
+
+        const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
+        BaseDatos[fecha] = filaResultados;
+        localStorage.setItem(`db_animalitos_${loteriaActiva}`, JSON.stringify(BaseDatos));
+
+        actualizarEstadoDB();
+        mostrarToast(`🎉 Resultados del día ${fecha.split('-').reverse().join('/')} guardados correctamente.`);
     });
+}
 
-    evaluarDesempeñoPredicciones(fecha, filaResultados);
-
-    BaseDatos[fecha] = filaResultados;
-    localStorage.setItem(`db_animalitos_${selectLoteria.value}`, JSON.stringify(BaseDatos));
-
-    actualizarEstadoDB();
-    mostrarToast(`🎉 Resultados del día ${fecha.split('-').reverse().join('/')} guardados correctamente.`);
-});
-
-// Función faltante para evaluar el desempeño de las predicciones
 function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
-    const prediccionesGuardadas = localStorage.getItem(`predicciones_${selectLoteria.value}_${fecha}`);
+    const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
+    const prediccionesGuardadas = localStorage.getItem(`predicciones_${loteriaActiva}_${fecha}`);
     if (!prediccionesGuardadas) {
         ModeloPesos.totalRevisiones += 1;
     } else {
         try {
             const predicciones = JSON.parse(prediccionesGuardadas);
-            // Contar aciertos: si al menos una predicción está en los resultados reales
             const aciertos = resultadosReales.filter(val => val !== '' && predicciones.includes(val)).length;
             if (aciertos > 0) ModeloPesos.aciertos += 1;
             ModeloPesos.totalRevisiones += 1;
@@ -151,8 +169,7 @@ function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
             console.warn("Error al evaluar predicciones:", e);
         }
     }
-    // Guardar el modelo actualizado
-    localStorage.setItem(`pesos_animalitos_${selectLoteria.value}`, JSON.stringify(ModeloPesos));
+    localStorage.setItem(`pesos_animalitos_${loteriaActiva}`, JSON.stringify(ModeloPesos));
 }
 
 // ==========================================
@@ -247,288 +264,308 @@ function obtenerTecnicaDominante(num, contribuciones) {
 }
 
 // ==========================================
-// MOTOR MATEMÁTICO CORREGIDO (btnGenerar)
+// MOTOR MATEMÁTICO UNIFICADO (btnGenerar)
 // ==========================================
-document.getElementById('btnGenerar').addEventListener('click', () => {
-    try {
-        const fechaActual = fechaCarga.value;
-        const fechasOrdenadas = Object.keys(BaseDatos).sort((a, b) => new Date(a) - new Date(b));
+const btnGenerar = document.getElementById('btnGenerar');
+if (btnGenerar) {
+    btnGenerar.addEventListener('click', () => {
+        try {
+            const fechaActual = fechaCarga ? fechaCarga.value : '';
+            const fechasOrdenadas = Object.keys(BaseDatos).sort((a, b) => new Date(a) - new Date(b));
 
-        if (fechasOrdenadas.length < 2) {
-            mostrarToast("⚠️ Se necesitan al menos 2 días de historial guardado.");
-            return;
-        }
-
-        let universo = ["0", "00"];
-        for (let i = 1; i <= 75; i++) universo.push(i.toString());
-
-        // 1. EXTRAER VALORES ACTUALES EN PANTALLA
-        let numsHoyEnPantalla = [];
-        HORAS.forEach((_, i) => {
-            let val = document.getElementById(`hora-inp-${i}`).value.trim();
-            let norm = normalizarNumero(val);
-            if (norm) {
-                numsHoyEnPantalla.push({ hora: i, num: norm });
+            if (fechasOrdenadas.length < 2) {
+                mostrarToast("⚠️ Se necesitan al menos 2 días de historial guardado.");
+                return;
             }
-        });
 
-        // 2. OBTENER POOL CALIENTE (últimos 2 días anteriores a hoy)
-        const fechaActualDate = new Date(fechaActual);
-        let diasFiltrados = fechasOrdenadas.filter(f => new Date(f) < fechaActualDate);
-        if (diasFiltrados.length === 0) {
-            diasFiltrados = [...fechasOrdenadas];
-        }
+            let universo = ["0", "00"];
+            for (let i = 1; i <= 75; i++) universo.push(i.toString());
 
-        let uDia1 = BaseDatos[diasFiltrados[diasFiltrados.length - 1]] || [];
-        let uDia2 = diasFiltrados.length > 1 ? (BaseDatos[diasFiltrados[diasFiltrados.length - 2]] || []) : [];
-        let ultimosNums = [...uDia1.filter(x => x !== ''), ...uDia2.filter(x => x !== '')];
+            // 1. EXTRAER VALORES ACTUALES EN PANTALLA
+            let numsHoyEnPantalla = [];
+            HORAS.forEach((_, i) => {
+                const inputElement = document.getElementById(`hora-inp-${i}`);
+                let val = inputElement ? inputElement.value.trim() : "";
+                let norm = normalizarNumero(val);
+                if (norm) {
+                    numsHoyEnPantalla.push({ hora: i, num: norm });
+                }
+            });
 
-        let freq48 = {};
-        ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
-        let poolCaliente = [...new Set(ultimosNums)].sort((a, b) => freq48[b] - freq48[a]);
+            // 2. OBTENER POOL CALIENTE (últimos 2 días anteriores a hoy)
+            const fechaActualDate = new Date(fechaActual);
+            let diasFiltrados = fechasOrdenadas.filter(f => new Date(f) < fechaActualDate);
+            if (diasFiltrados.length === 0) {
+                diasFiltrados = [...fechasOrdenadas];
+            }
 
-        // 3. ALGORITMO DE ANCLAJE EN VIVO
-        let numerosAncladosMatch = [];
-        if (numsHoyEnPantalla.length > 0) {
-            let soloNumerosHoy = numsHoyEnPantalla.map(x => x.num);
+            let uDia1 = BaseDatos[diasFiltrados[diasFiltrados.length - 1]] || [];
+            let uDia2 = diasFiltrados.length > 1 ? (BaseDatos[diasFiltrados[diasFiltrados.length - 2]] || []) : [];
+            let ultimosNums = [...uDia1.filter(x => x !== ''), ...uDia2.filter(x => x !== '')];
 
+            let freq48 = {};
+            ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
+            let poolCaliente = [...new Set(ultimosNums)].sort((a, b) => freq48[b] - freq48[a]);
+
+            // 3. ALGORITMO DE ANCLAJE EN VIVO
+            let numerosAncladosMatch = [];
+            if (numsHoyEnPantalla.length > 0) {
+                let soloNumerosHoy = numsHoyEnPantalla.map(x => x.num);
+
+                fechasOrdenadas.forEach(f => {
+                    if (f !== fechaActual) {
+                        let resultadosEseDia = BaseDatos[f] || [];
+                        let compartePatron = soloNumerosHoy.some(n => resultadosEseDia.includes(n));
+
+                        if (compartePatron) {
+                            resultadosEseDia.forEach(n => {
+                                if (n !== '' && !soloNumerosHoy.includes(n)) {
+                                    numerosAncladosMatch.push(n);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            let poolAnclajeFinal = numerosAncladosMatch.filter(n => poolCaliente.includes(n));
+            let freqAnclaje = {};
+            poolAnclajeFinal.forEach(n => freqAnclaje[n] = (freqAnclaje[n] || 0) + 1);
+            poolAnclajeFinal = [...new Set(poolAnclajeFinal)].sort((a, b) => freqAnclaje[b] - freqAnclaje[a]);
+
+            // 4. ENJAULADOS GENERALES DEL MES
+            let todosLosVistos = [];
             fechasOrdenadas.forEach(f => {
                 if (f !== fechaActual) {
-                    let resultadosEseDia = BaseDatos[f] || [];
-                    let compartePatron = soloNumerosHoy.some(n => resultadosEseDia.includes(n));
-
-                    if (compartePatron) {
-                        resultadosEseDia.forEach(n => {
-                            if (n !== '' && !soloNumerosHoy.includes(n)) {
-                                numerosAncladosMatch.push(n);
-                            }
-                        });
-                    }
+                    (BaseDatos[f] || []).forEach(n => { if (n !== '') todosLosVistos.push(n); });
                 }
             });
-        }
 
-        let poolAnclajeFinal = numerosAncladosMatch.filter(n => poolCaliente.includes(n));
-        let freqAnclaje = {};
-        poolAnclajeFinal.forEach(n => freqAnclaje[n] = (freqAnclaje[n] || 0) + 1);
-        poolAnclajeFinal = [...new Set(poolAnclajeFinal)].sort((a, b) => freqAnclaje[b] - freqAnclaje[a]);
-
-        // 4. ENJAULADOS GENERALES DEL MES
-        let todosLosVistos = [];
-        fechasOrdenadas.forEach(f => {
-            if (f !== fechaActual) {
-                (BaseDatos[f] || []).forEach(n => { if (n !== '') todosLosVistos.push(n); });
-            }
-        });
-
-        numsHoyEnPantalla.forEach(item => {
-            todosLosVistos.push(item.num);
-        });
-
-        let setVistos = new Set(todosLosVistos);
-        let enjaulados = universo.filter(n => !setVistos.has(n));
-
-        // 5. CADENA DE TRANSICIONES
-        let transiciones = {};
-        for (let i = 0; i < todosLosVistos.length - 1; i++) {
-            let act = todosLosVistos[i];
-            let sig = todosLosVistos[i + 1];
-            if (!transiciones[act]) transiciones[act] = [];
-            transiciones[act].push(sig);
-        }
-
-        // 6. ANÁLISIS ADICIONALES (CICLOS Y SUMA)
-        const { retrasos, maxRetraso } = calcularCiclosRetrasados(fechasOrdenadas, universo, fechaActual);
-        const { promedio: sumaPromedio, rango } = analizarSumaHistorica(fechasOrdenadas);
-
-        let sumaParcialHoy = numsHoyEnPantalla.reduce((acc, item) => {
-            let val = parseInt(item.num);
-            return acc + (isNaN(val) ? 0 : val);
-        }, 0);
-
-        let numerosRestantes = 12 - numsHoyEnPantalla.length;
-        let promedioPorHora = numerosRestantes > 0 ? (sumaPromedio - sumaParcialHoy) / numerosRestantes : 0;
-        let rangoPorHora = rango / 12;
-
-        // 7. ASIGNACIÓN DINÁMICA DE PESOS CON CONTRIBUCIONES
-        let pesos = {};
-        let tecnicasContribucion = {};
-
-        function addPeso(num, cantidad, tecnica) {
-            pesos[num] = (pesos[num] || 0) + cantidad;
-            if (!tecnicasContribucion[num]) {
-                tecnicasContribucion[num] = { anclaje: 0, secuencial: 0, pool: 0, ciclos: 0, suma: 0, enjaulado: 0 };
-            }
-            tecnicasContribucion[num][tecnica] += cantidad;
-        }
-
-        // 7a. Anclaje
-        poolAnclajeFinal.forEach((n, i) => {
-            let aporte = ModeloPesos.anclaje - (i * 5);
-            if (aporte > 0) addPeso(n, aporte, 'anclaje');
-        });
-
-        // 7b. Secuencial (transiciones)
-        let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
-        if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
-            transiciones[ultimoNumeroGlobal].forEach(n => {
-                addPeso(n, ModeloPesos.secuencial, 'secuencial');
+            numsHoyEnPantalla.forEach(item => {
+                todosLosVistos.push(item.num);
             });
-        }
 
-        // 7c. Pool caliente
-        poolCaliente.forEach((n, i) => {
-            let aporte = Math.max(ModeloPesos.pool - (i * 2), 2);
-            addPeso(n, aporte, 'pool');
-        });
+            let setVistos = new Set(todosLosVistos);
+            let enjaulados = universo.filter(n => !setVistos.has(n));
 
-        // 7d. Enjaulados
-        enjaulados.forEach(n => {
-            addPeso(n, ModeloPesos.enjaulado, 'enjaulado');
-        });
+            // 5. CADENA DE TRANSICIONES
+            let transiciones = {};
+            for (let i = 0; i < todosLosVistos.length - 1; i++) {
+                let act = todosLosVistos[i];
+                let sig = todosLosVistos[i + 1];
+                if (!transiciones[act]) transiciones[act] = [];
+                transiciones[act].push(sig);
+            }
 
-        // 7e. Ciclos de retraso
-        universo.forEach(n => {
-            let factorRetraso = (retrasos[n] / maxRetraso) * 15;
-            addPeso(n, factorRetraso, 'ciclos');
-        });
+            // 6. ANÁLISIS ADICIONALES (CICLOS Y SUMA)
+            const { retrasos, maxRetraso } = calcularCiclosRetrasados(fechasOrdenadas, universo, fechaActual);
+            const { promedio: sumaPromedio, rango } = analizarSumaHistorica(fechasOrdenadas);
 
-        // 7f. Equilibrio de suma
-        if (numerosRestantes > 0) {
+            let sumaParcialHoy = numsHoyEnPantalla.reduce((acc, item) => {
+                let val = parseInt(item.num);
+                return acc + (isNaN(val) ? 0 : val);
+            }, 0);
+
+            let numerosRestantes = 12 - numsHoyEnPantalla.length;
+            let promedioPorHora = numerosRestantes > 0 ? (sumaPromedio - sumaParcialHoy) / numerosRestantes : 0;
+            let rangoPorHora = rango / 12;
+
+            // 7. ASIGNACIÓN DINÁMICA DE PESOS CON CONTRIBUCIONES
+            let pesos = {};
+            let tecnicasContribucion = {};
+
+            function addPeso(num, cantidad, tecnica) {
+                pesos[num] = (pesos[num] || 0) + cantidad;
+                if (!tecnicasContribucion[num]) {
+                    tecnicasContribucion[num] = { anclaje: 0, secuencial: 0, pool: 0, ciclos: 0, suma: 0, enjaulado: 0 };
+                }
+                tecnicasContribucion[num][tecnica] += cantidad;
+            }
+
+            // 7a. Anclaje
+            poolAnclajeFinal.forEach((n, i) => {
+                let aporte = ModeloPesos.anclaje - (i * 5);
+                if (aporte > 0) addPeso(n, aporte, 'anclaje');
+            });
+
+            // 7b. Secuencial (transiciones)
+            let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
+            if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
+                transiciones[ultimoNumeroGlobal].forEach(n => {
+                    addPeso(n, ModeloPesos.secuencial, 'secuencial');
+                });
+            }
+
+            // 7c. Pool caliente
+            poolCaliente.forEach((n, i) => {
+                let aporte = Math.max(ModeloPesos.pool - (i * 2), 2);
+                addPeso(n, aporte, 'pool');
+            });
+
+            // 7d. Enjaulados
+            enjaulados.forEach(n => {
+                addPeso(n, ModeloPesos.enjaulado, 'enjaulado');
+            });
+
+            // 7e. Ciclos de retraso
             universo.forEach(n => {
-                let numVal = parseInt(n);
-                if (isNaN(numVal)) return;
-                let diferencia = Math.abs(numVal - promedioPorHora);
-                let bonusSuma = Math.max(0, 10 - (diferencia / rangoPorHora) * 10);
-                addPeso(n, bonusSuma, 'suma');
+                let factorRetraso = (retrasos[n] / maxRetraso) * 15;
+                addPeso(n, factorRetraso, 'ciclos');
             });
-        }
 
-        // 8. FILTRADO POR UMBRAL DE CONFIANZA Y DEFINICIÓN DE SUGERENCIAS GENERALES
-        // CORRECCIÓN: Definimos sugerencias en el bloque principal para que el cronograma la use libremente
-        const sugerencias = Object.keys(pesos).sort((a, b) => pesos[b] - pesos[a]);
+            // 7f. Equilibrio de suma
+            if (numerosRestantes > 0) {
+                universo.forEach(n => {
+                    let numVal = parseInt(n);
+                    if (isNaN(numVal)) return;
+                    let diferencia = Math.abs(numVal - promedioPorHora);
+                    let bonusSuma = Math.max(0, 10 - (diferencia / rangoPorHora) * 10);
+                    addPeso(n, bonusSuma, 'suma');
+                });
+            }
 
-        let prediccionesFuertes = Object.keys(pesos)
-            .filter(n => pesos[n] >= umbralConfianza)
-            .sort((a, b) => pesos[b] - pesos[a]);
+            // ==========================================
+            // 8. FILTRADO CORREGIDO (SOLUCIÓN AL SCOPE)
+            // ==========================================
+            let pesosArray = Object.values(pesos);
+            let pesoMaximo = Math.max(...pesosArray, 1);
+            let umbralConfianza = pesoMaximo * 0.7;
 
-        if (prediccionesFuertes.length === 0) {
-            // Fallback: top 3 de sugerencias generales
-            prediccionesFuertes = sugerencias.slice(0, 3);
-        } else {
-            prediccionesFuertes = prediccionesFuertes.slice(0, 4);
-        }
+            // ¡CORRECCIÓN CRÍTICA!: 'sugerencias' ahora se declara aquí arriba en el bloque general del botón.
+            // Esto asegura que el cronograma de abajo siempre pueda leer esta lista sin fallar.
+            const sugerencias = Object.keys(pesos).sort((a, b) => pesos[b] - pesos[a]);
 
-        // Guardar predicciones para evaluación posterior
-        localStorage.setItem(`predicciones_${selectLoteria.value}_${fechaActual}`, JSON.stringify(prediccionesFuertes));
+            let prediccionesFuertes = Object.keys(pesos)
+                .filter(n => pesos[n] >= umbralConfianza)
+                .sort((a, b) => pesos[b] - pesos[a]);
 
-        // 9. RENDERIZADO FINAL
-        const fName = (n) => `[${n.padStart(2, '0')}] ${DICCIONARIO[n] || 'Animal'}`;
-
-        let porcEficiencia = ModeloPesos.totalRevisiones > 0
-            ? Math.round((ModeloPesos.aciertos / ModeloPesos.totalRevisiones) * 100)
-            : 100;
-        document.getElementById('txt-eficiencia').innerText = `${porcEficiencia}%`;
-        document.getElementById('txt-aprendizaje-log').innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones. Peso de Anclaje: ${ModeloPesos.anclaje}pts.`;
-
-        // Tarjetas de predicción
-        const tarjetaContainer = document.getElementById('tarjetas-prediccion-container');
-        let tarjetasHTML = '';
-
-        prediccionesFuertes.forEach((num, idx) => {
-            let nombreAnimal = fName(num);
-            let pesoRel = (pesos[num] / pesoMaximo) * 95;
-            let porcentajeEstimado = Math.min(95, Math.round(pesoRel)).toFixed(0);
-            let tecnica = obtenerTecnicaDominante(num, tecnicasContribucion);
-
-            let descripcion = idx === 0 ? 'Predicción principal' : (idx === 1 ? 'Alta probabilidad secundaria' : 'Opción complementaria');
-
-            tarjetasHTML += `
-                <div class="tarjeta-prediccion">
-                    <div class="pred-info">
-                        <h4>${nombreAnimal}</h4>
-                        <p>${descripcion}</p>
-                        <span class="badge-tecnica" style="font-size:12px; color: var(--texto-secundario); background: rgba(0,0,0,0.05); padding:2px 8px; border-radius:12px;">${tecnica}</span>
-                    </div>
-                    <div class="pred-porcentaje pred-verde">${porcentajeEstimado}%</div>
-                </div>
-            `;
-        });
-
-        if (prediccionesFuertes.length === 0) {
-            tarjetasHTML = '<p class="text-center">No hay predicciones que superen el umbral de confianza hoy. Intenta con más datos históricos.</p>';
-        }
-        tarjetaContainer.innerHTML = tarjetasHTML;
-
-        // Pool caliente
-        document.getElementById('pool-badges').innerHTML = poolCaliente.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('');
-
-        // Conexión histórica
-        const txtAnclaje = document.getElementById('txt-anclaje-info');
-        const badgesAnclaje = document.getElementById('anclaje-badges');
-        if (txtAnclaje && badgesAnclaje) {
-            if (numsHoyEnPantalla.length > 0) {
-                txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) hoy para cruce dinámico.`;
-                badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando modificaciones...</div>';
+            if (prediccionesFuertes.length === 0) {
+                prediccionesFuertes = sugerencias.slice(0, 3);
             } else {
-                txtAnclaje.innerText = "Introduce al menos un resultado de hoy para activar.";
-                badgesAnclaje.innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
+                prediccionesFuertes = prediccionesFuertes.slice(0, 4);
             }
-        }
 
-        // ==========================================
-        // RENDERIZADO MEJORADO CON LÓGICA PREDICTIVA
-        // ==========================================
-       
-        // 1. Enjaulados y Mapa de Calor (Con protección de existencia)
-        const tableroGrid = document.getElementById('tablero-grid');
-        if (tableroGrid) {
-            let tableroHTML = '';
-            universo.forEach(n => {
-                let extraClass = setVistos.has(n) ? 'activa' : 'fria';
-                tableroHTML += `<div class="celda-tablero ${extraClass}">${n === '00' ? '00' : n.padStart(2,'0')}</div>`;
-            });
-            tableroGrid.innerHTML = tableroHTML;
-        }
+            // Guardar predicciones para evaluación posterior
+            const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
+            localStorage.setItem(`predicciones_${loteriaActiva}_${fechaActual}`, JSON.stringify(prediccionesFuertes));
 
-        // 2. Cronograma de horas INTELIGENTE
-        const cronoContainer = document.getElementById('cronograma-horas-container');
-        if (cronoContainer) {
-            let cronoHTML = '';
-            HORAS.forEach((h, i) => {
-                let inputVal = document.getElementById(`hora-inp-${i}`).value.trim();
-                let normInput = normalizarNumero(inputVal);
-               
-                if (normInput) {
-                    cronoHTML += `
-                        <div class="cronograma-item" style="border-left: 4px solid var(--azul-guardar); background-color: rgba(37, 99, 235, 0.05)">
-                            <span class="crono-hora">${h}</span>
-                            <strong>✅ ${fName(normInput)}</strong>
-                        </div>`;
-                } else {
-                    // Ahora sí encuentra la lista de sugerencias sin explotar 🔮
-                    let fav = sugerencias[i % sugerencias.length];
-                    cronoHTML += `
-                        <div class="cronograma-item">
-                            <span class="crono-hora">${h}</span>
-                            <strong style="color: #2e7d32;">🔮 ${fName(fav)}</strong>
-                        </div>`;
+            // ==========================================
+            // 9. RENDERIZADO FINAL PROTEGIDO
+            // ==========================================
+            const fName = (n) => `[${n.padStart(2, '0')}] ${DICCIONARIO[n] || 'Animal'}`;
+
+            let porcEficiencia = ModeloPesos.totalRevisiones > 0
+                ? Math.round((ModeloPesos.aciertos / ModeloPesos.totalRevisiones) * 100)
+                : 100;
+                
+            const txtEficiencia = document.getElementById('txt-eficiencia');
+            if (txtEficiencia) txtEficiencia.innerText = `${porcEficiencia}%`;
+            
+            const txtAprendizajeLog = document.getElementById('txt-aprendizaje-log');
+            if (txtAprendizajeLog) txtAprendizajeLog.innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones. Peso de Anclaje: ${ModeloPesos.anclaje}pts.`;
+
+            
+            // Tarjetas de predicción
+            const tarjetaContainer = document.getElementById('tarjetas-prediccion-container');
+            if (tarjetaContainer) {
+                let tarjetasHTML = '';
+
+                prediccionesFuertes.forEach((num, idx) => {
+                    let nombreAnimal = fName(num);
+                    let pesoRel = (pesos[num] / pesoMaximo) * 95;
+                    let porcentajeEstimado = Math.min(95, Math.round(pesoRel)).toFixed(0);
+                    let tecnica = obtenerTecnicaDominante(num, tecnicasContribucion);
+
+                    let descripcion = idx === 0 ? 'Predicción principal' : (idx === 1 ? 'Alta probabilidad secundaria' : 'Opción complementaria');
+
+                    tarjetasHTML += `
+                        <div class="tarjeta-prediccion">
+                            <div class="pred-info">
+                                <h4>${nombreAnimal}</h4>
+                                <p>${descripcion}</p>
+                                <span class="badge-tecnica" style="font-size:12px; color: var(--texto-secundario); background: rgba(0,0,0,0.05); padding:2px 8px; border-radius:12px;">${tecnica}</span>
+                            </div>
+                            <div class="pred-porcentaje pred-verde">${porcentajeEstimado}%</div>
+                        </div>
+                    `;
+                });
+
+                if (prediccionesFuertes.length === 0) {
+                    tarjetasHTML = '<p class="text-center">No hay predicciones que superen el umbral de confianza hoy. Intenta con más datos históricos.</p>';
                 }
-            });
-            cronoContainer.innerHTML = cronoHTML;
+                tarjetaContainer.innerHTML = tarjetasHTML;
+            }
+
+            // Pool caliente
+            const poolBadges = document.getElementById('pool-badges');
+            if (poolBadges) {
+                poolBadges.innerHTML = poolCaliente.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('');
+            }
+
+            // Conexión histórica
+            const txtAnclaje = document.getElementById('txt-anclaje-info');
+            const badgesAnclaje = document.getElementById('anclaje-badges');
+            if (txtAnclaje && badgesAnclaje) {
+                if (numsHoyEnPantalla.length > 0) {
+                    txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) hoy para cruce dinámico.`;
+                    badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando coincidencias...</div>';
+                } else {
+                    txtAnclaje.innerText = "Introduce al menos un resultado de hoy para activar.";
+                    badgesAnclaje.innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
+                }
+            }
+
+            // Enjaulados y Mapa de Calor
+            const tableroGrid = document.getElementById('tablero-grid');
+            if (tableroGrid) {
+                let tableroHTML = '';
+                universo.forEach(n => {
+                    let extraClass = setVistos.has(n) ? 'activa' : 'fria';
+                    tableroHTML += `<div class="celda-tablero ${extraClass}">${n === '00' ? '00' : n.padStart(2,'0')}</div>`;
+                });
+                tableroGrid.innerHTML = tableroHTML;
+            }
+
+            // Cronograma de horas INTELIGENTE
+            const cronoContainer = document.getElementById('cronograma-horas-container');
+            if (cronoContainer) {
+                let cronoHTML = '';
+                HORAS.forEach((h, i) => {
+                    const inputElement = document.getElementById(`hora-inp-${i}`);
+                    let inputVal = inputElement ? inputElement.value.trim() : '';
+                    let normInput = normalizarNumero(inputVal);
+                   
+                    if (normInput) {
+                        cronoHTML += `
+                            <div class="cronograma-item" style="border-left: 4px solid var(--azul-guardar); background-color: rgba(37, 99, 235, 0.05)">
+                                <span class="crono-hora">${h}</span>
+                                <strong>✅ ${fName(normInput)}</strong>
+                            </div>`;
+                    } else {
+                        // Al estar declarada globalmente arriba, la variable 'sugerencias' ya no falla aquí 🔮
+                        let fav = sugerencias[i % sugerencias.length];
+                        cronoHTML += `
+                            <div class="cronograma-item">
+                                <span class="crono-hora">${h}</span>
+                                <strong style="color: #2e7d32;">🔮 ${fName(fav)}</strong>
+                            </div>`;
+                    }
+                });
+                cronoContainer.innerHTML = cronoHTML;
+            }
+
+            // Despliegue final del panel
+            const panelResultados = document.getElementById('panelResultados');
+            if (panelResultados) {
+                panelResultados.style.display = 'block';
+                window.scrollTo({ top: panelResultados.offsetTop, behavior: 'smooth' });
+            }
+           
+            mostrarToast("✅ Análisis generado con éxito.");
+
+        } catch (error) {
+            console.error("Error crítico en ejecución:", error);
+            mostrarToast("❌ Ocurrió un error en el motor matemático.");
         }
-
-        // 3. Flujo de finalización limpio
-        if (document.getElementById('panelResultados')) {
-            document.getElementById('panelResultados').style.display = 'block';
-            window.scrollTo({ top: document.getElementById('panelResultados').offsetTop, behavior: 'smooth' });
-        }
-       
-        mostrarToast("✅ Análisis generado con éxito.");
-
-    } catch (error) {
-        console.error("Error crítico en ejecución:", error);
-        mostrarToast("❌ Ocurrió un error en el motor matemático.");
-    }
-});
-
+    });
+}
