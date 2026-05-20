@@ -563,9 +563,6 @@ if (btnGenerar) {
            
             mostrarToast("✅ Análisis generado con éxito.");
 
-        } catch (error) {
-            console.error("Error crítico en ejecución:", error);
-            mostrarToast("❌ Ocurrió un error en el motor matemático.");
-        }
+        } 
     });
 }
