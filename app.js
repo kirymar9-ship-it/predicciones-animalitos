@@ -119,7 +119,7 @@ function construirGridInputs() {
 function cargarDiaEspecifico(fecha) {
     const tituloFecha = document.getElementById('titulo-fecha-activa');
     if (tituloFecha) tituloFecha.innerText = `Resultados del: ${fecha.split('-').reverse().join('/')}`;
-    
+   
     const resultadoDia = BaseDatos[fecha] || Array(12).fill("");
     HORAS.forEach((_, i) => {
         const inputElement = document.getElementById(`hora-inp-${i}`);
@@ -173,7 +173,7 @@ function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
 }
 
 // ==========================================
-// VALIDACIÓN DE ENTRADA
+// VALIDACIÓN DE ENTRADA (CORREGIDA)
 // ==========================================
 document.addEventListener('input', (e) => {
     if (e.target.classList.contains('js-num-input')) {
@@ -182,14 +182,18 @@ document.addEventListener('input', (e) => {
 });
 
 document.addEventListener('focusout', (e) => {
-    if (e.target.classList.contains('js-num-input') && e.target.value !== '') {
-        let val = e.target.value;
+    if (e.target.classList.contains('js-num-input')) {
+        let val = e.target.value.trim();
+        if (val === '') return;
+        
+        // Permitir explícitamente "0" y "00" sin alterarlos
         if (val === "0" || val === "00") return;
+        
         let num = parseInt(val, 10);
-        if (num >= 1 && num <= 75) {
+        if (!isNaN(num) && num >= 1 && num <= 75) {
             e.target.value = num < 10 ? '0' + num : num.toString();
         } else {
-            e.target.value = '';
+            e.target.value = ''; // Solo borra si el número se sale de los parámetros (ej. 89)
         }
     }
 });
@@ -197,7 +201,7 @@ document.addEventListener('focusout', (e) => {
 function normalizarNumero(val) {
     if (val === "00" || val === "0") return val;
     let num = parseInt(val, 10);
-    return (num >= 1 && num <= 75) ? num.toString() : null;
+    return (!isNaN(num) && num >= 1 && num <= 75) ? num.toString() : null;
 }
 
 // ==========================================
@@ -425,14 +429,12 @@ if (btnGenerar) {
             }
 
             // ==========================================
-            // 8. FILTRADO CORREGIDO (SOLUCIÓN AL SCOPE)
+            // 8. FILTRADO CORREGIDO
             // ==========================================
             let pesosArray = Object.values(pesos);
             let pesoMaximo = Math.max(...pesosArray, 1);
             let umbralConfianza = pesoMaximo * 0.7;
 
-            // ¡CORRECCIÓN CRÍTICA!: 'sugerencias' ahora se declara aquí arriba en el bloque general del botón.
-            // Esto asegura que el cronograma de abajo siempre pueda leer esta lista sin fallar.
             const sugerencias = Object.keys(pesos).sort((a, b) => pesos[b] - pesos[a]);
 
             let prediccionesFuertes = Object.keys(pesos)
@@ -457,14 +459,13 @@ if (btnGenerar) {
             let porcEficiencia = ModeloPesos.totalRevisiones > 0
                 ? Math.round((ModeloPesos.aciertos / ModeloPesos.totalRevisiones) * 100)
                 : 100;
-                
+               
             const txtEficiencia = document.getElementById('txt-eficiencia');
             if (txtEficiencia) txtEficiencia.innerText = `${porcEficiencia}%`;
-            
+           
             const txtAprendizajeLog = document.getElementById('txt-aprendizaje-log');
             if (txtAprendizajeLog) txtAprendizajeLog.innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones. Peso de Anclaje: ${ModeloPesos.anclaje}pts.`;
 
-            
             // Tarjetas de predicción
             const tarjetaContainer = document.getElementById('tarjetas-prediccion-container');
             if (tarjetaContainer) {
@@ -542,7 +543,6 @@ if (btnGenerar) {
                                 <strong>✅ ${fName(normInput)}</strong>
                             </div>`;
                     } else {
-                        // Al estar declarada globalmente arriba, la variable 'sugerencias' ya no falla aquí 🔮
                         let fav = sugerencias[i % sugerencias.length];
                         cronoHTML += `
                             <div class="cronograma-item">
@@ -563,6 +563,9 @@ if (btnGenerar) {
            
             mostrarToast("✅ Análisis generado con éxito.");
 
-        } 
+        } catch (error) {
+            console.error("Error crítico en ejecución:", error);
+            mostrarToast("❌ Ocurrió un error en el motor mattico.");
+        }
     });
 }
