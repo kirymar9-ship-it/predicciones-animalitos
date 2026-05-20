@@ -478,42 +478,61 @@ document.getElementById('btnGenerar').addEventListener('click', () => {
             }
         }
 
-        // Enjaulados y Mapa de Calor
+        // ==========================================
+        // RENDERIZADO MEJORADO CON LÓGICA PREDICTIVA
+        // ==========================================
+        
+        // 1. Enjaulados y Mapa de Calor (Con protección de existencia)
         const tableroGrid = document.getElementById('tablero-grid');
         if (tableroGrid) {
             let tableroHTML = '';
             universo.forEach(n => {
+                // Mantiene el estilo según si el número ya ha sido visto en el mes
                 let extraClass = setVistos.has(n) ? 'activa' : 'fria';
-                tableroHTML += `<div class="celda-tablero ${extraClass}">${n}</div>`;
+                tableroHTML += `<div class="celda-tablero ${extraClass}">${n === '00' ? '00' : n.padStart(2,'0')}</div>`;
             });
             tableroGrid.innerHTML = tableroHTML;
         }
 
-        // Cronograma de horas
+        // 2. Cronograma de horas INTELIGENTE (Fusión de ambos códigos)
         const cronoContainer = document.getElementById('cronograma-horas-container');
         if (cronoContainer) {
             let cronoHTML = '';
             HORAS.forEach((h, i) => {
-                let valHoy = document.getElementById(`hora-inp-${i}`).value.trim();
-                let texto = valHoy ? `Salió: ${valHoy}` : `Pendiente...`;
-                cronoHTML += `
-                    <div class="cronograma-item">
-                        <span class="crono-hora">${h}</span>
-                        <strong>${texto}</strong>
-                    </div>`;
+                let inputVal = document.getElementById(`hora-inp-${i}`).value.trim();
+                let normInput = normalizarNumero(inputVal);
+                
+                if (normInput) {
+                    // Si ya salió, muestra el resultado real con el diseño nuevo
+                    cronoHTML += `
+                        <div class="cronograma-item" style="border-left: 4px solid var(--azul-guardar); background-color: rgba(37, 99, 235, 0.05)">
+                            <span class="crono-hora">${h}</span>
+                            <strong>✅ ${fName(normInput)}</strong>
+                        </div>`;
+                } else {
+                    // SI ESTÁ VACÍO: Activa el cerebro predictivo viejo en la interfaz nueva 🧠🔮
+                    let fav = sugerencias[i % sugerencias.length];
+                    cronoHTML += `
+                        <div class="cronograma-item">
+                            <span class="crono-hora">${h}</span>
+                            <strong style="color: #2e7d32;">🔮 ${fName(fav)}</strong>
+                        </div>`;
+                }
             });
             cronoContainer.innerHTML = cronoHTML;
         }
 
-        // Mostrar el panel de resultados al finalizar
-        document.getElementById('panelResultados').style.display = 'block';
+        // 3. Flujo de finalización limpio (Nuevo)
+        if (document.getElementById('panelResultados')) {
+            document.getElementById('panelResultados').style.display = 'block';
+            window.scrollTo({ top: document.getElementById('panelResultados').offsetTop, behavior: 'smooth' });
+        }
+        
         mostrarToast("✅ Análisis generado con éxito.");
 
     } catch (error) {
-        console.error("Error al generar el análisis:", error);
+        console.error("Error crítico en ejecución:", error);
         mostrarToast("❌ Ocurrió un error en el motor matemático.");
     }
 });
 
-
-   
