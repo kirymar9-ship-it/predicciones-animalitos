@@ -8,21 +8,40 @@ const DICCIONARIO = {
     "17": "Pavo", "18": "Burro", "19": "Chivo", "20": "Cochino", "21": "Gallo", "22": "Camello",
     "23": "Cebra", "24": "Iguana", "25": "Gallina", "26": "Vaca", "27": "Perro", "28": "Zamuro",
     "29": "Elefante", "30": "Caimán", "31": "Lapa", "32": "Ardilla", "33": "Pescado", "34": "Venado",
-    "35": "Jirafa", "36": "Culebra", 
+    "35": "Jirafa", "36": "Culebra",
     // Los siguientes solo se usarán si la lotería activa es el Guácharo
-    "37": "Tortuga", "38": "Búfalo", "39": "Lechuza", "40": "Avispa", "41": "Canguro", "42": "Tucán", 
-    "43": "Mariposa", "44": "Chigüire", "45": "Garza", "46": "Puma", "47": "Pavo Real", "48": "Puercoespín", 
-    "49": "Pereza", "50": "Canario", "51": "Pelícano", "52": "Pulpo", "53": "Caracol", "54": "Grillo", 
-    "55": "Oso hormiguero", "56": "Tiburón", "57": "Pato", "58": "Hormiga", "59": "Pantera", "60": "Camaleón", 
+    "37": "Tortuga", "38": "Búfalo", "39": "Lechuza", "40": "Avispa", "41": "Canguro", "42": "Tucán",
+    "43": "Mariposa", "44": "Chigüire", "45": "Garza", "46": "Puma", "47": "Pavo Real", "48": "Puercoespín",
+    "49": "Pereza", "50": "Canario", "51": "Pelícano", "52": "Pulpo", "53": "Caracol", "54": "Grillo",
+    "55": "Oso hormiguero", "56": "Tiburón", "57": "Pato", "58": "Hormiga", "59": "Pantera", "60": "Camaleón",
     "61": "Danta", "62": "Cachicamo", "63": "Cangrejo", "64": "Gavilán", "65": "Araña", "66": "Lobo",
-    "67": "Avestruz", "68": "Jaguar", "69": "Conejo", "70": "Bisonte", "71": "Guacamaya", "72": "Gorila", 
+    "67": "Avestruz", "68": "Jaguar", "69": "Conejo", "70": "Bisonte", "71": "Guacamaya", "72": "Gorila",
     "73": "Hipopótamo", "74": "Turpial", "75": "Guácharo"
 };
 
 const HORAS = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"];
 
 let BaseDatos = {};
-let ModeloPesos = { anclaje: 100, secuencial: 50, pool: 30, enjaulado: 10, totalRevisiones: 0, aciertos: 0 };
+
+/**
+ * NUEVA MATRIZ DE APRENDIZAJE HORARIO (Feedback Loop)
+ * Guarda la fuerza de cada estrategia por cada una de las 12 horas.
+ * Valores base por defecto: Continuidad (Pool), Anclaje Histórico y Compensación (Ciclos/Vacíos).
+ */
+let MatrizEficienciaHoraria = {};
+
+function inicializarMatrizEficiencia() {
+    MatrizEficienciaHoraria = {};
+    HORAS.forEach(hora => {
+        MatrizEficienciaHoraria[hora] = {
+            estrategiaA_pool: 100,      // Fuerza inicial Pool Caliente (Continuidad)
+            estrategiaB_anclaje: 100,   // Fuerza inicial Anclaje Histórico
+            estrategiaC_vacios: 100,    // Fuerza inicial Ciclos de Atraso
+            totalAlertas: 0,
+            aciertosReales: 0
+        };
+    });
+}
 
 const selectLoteria = document.getElementById('select-loteria');
 const fechaCarga = document.getElementById('fecha-carga');
@@ -32,8 +51,7 @@ const fechaCarga = document.getElementById('fecha-carga');
 // ==========================================
 function obtenerLimiteLoteria() {
     const loteriaActiva = selectLoteria ? selectLoteria.value.toLowerCase() : 'lotto-activo';
-    // Si la selección incluye "guacharo", permitimos hasta el 75, de lo contrario, el límite es 36.
-    if (loteriaActiva.includes('guacharo')) {
+    if (loteriaActiva.includes('guacharo') || loteriaActiva.includes('chaima')) {
         return 75;
     }
     return 36;
@@ -59,6 +77,9 @@ window.addEventListener('DOMContentLoaded', () => {
     construirGridInputs();
     actualizarEstadoDB();
 
+    // Setup de eventos para el sistema de modales y pestañas recién agregado
+    inicializarEventosInterfaz();
+
     if (fechaCarga && fechaCarga.value) {
         const panelDatos = document.getElementById('panel-datos-dia');
         if (panelDatos) panelDatos.style.display = 'block';
@@ -73,7 +94,6 @@ if (selectLoteria) {
     selectLoteria.addEventListener('change', () => {
         cargarBaseDatos();
         actualizarEstadoDB();
-        // Limpiar inputs si se cambia de lotería para evitar números fuera de rango
         HORAS.forEach((_, i) => {
             const inputElement = document.getElementById(`hora-inp-${i}`);
             if (inputElement) inputElement.value = "";
@@ -100,8 +120,13 @@ function cargarBaseDatos() {
     const datosGuardados = localStorage.getItem(`db_animalitos_${loteriaActiva}`);
     BaseDatos = datosGuardados ? JSON.parse(datosGuardados) : {};
 
-    const pesosGuardados = localStorage.getItem(`pesos_animalitos_${loteriaActiva}`);
-    if (pesosGuardados) ModeloPesos = JSON.parse(pesosGuardados);
+    // Cargar la matriz auto-optimizada específica de esta lotería
+    const matrizGuardada = localStorage.getItem(`matriz_eficiencia_${loteriaActiva}`);
+    if (matrizGuardada) {
+        MatrizEficienciaHoraria = JSON.parse(matrizGuardada);
+    } else {
+        inicializarMatrizEficiencia();
+    }
 }
 
 function actualizarEstadoDB() {
@@ -146,7 +171,7 @@ function cargarDiaEspecifico(fecha) {
 }
 
 // ==========================================
-// GUARDADO DE DATOS Y EVALUACIÓN DE DESEMPEÑO
+// GUARDADO DE DATOS Y MOTOR DEL FEEDBACK LOOP
 // ==========================================
 const btnGuardarDia = document.getElementById('btnGuardarDia');
 if (btnGuardarDia) {
@@ -161,33 +186,75 @@ if (btnGuardarDia) {
             filaResultados.push(normalizarNumero(val) || "");
         });
 
-        evaluarDesempeñoPredicciones(fecha, filaResultados);
+        // Disparar la auditoría matemática inteligente antes de consolidar en la persistencia local
+        auditarYOptimizarEstrategias(fecha, filaResultados);
 
         const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
         BaseDatos[fecha] = filaResultados;
         localStorage.setItem(`db_animalitos_${loteriaActiva}`, JSON.stringify(BaseDatos));
 
         actualizarEstadoDB();
-        mostrarToast(`🎉 Resultados del día ${fecha.split('-').reverse().join('/')} guardados correctamente.`);
+        mostrarToast(`🎉 Resultados guardados y estrategias re-calibradas con éxito.`);
     });
 }
 
-function evaluarDesempeñoPredicciones(fecha, resultadosReales) {
+/**
+ * SISTEMA FEEDBACK LOOP: Auditoría retroactiva profunda por cada hora
+ */
+function auditarYOptimizarEstrategias(fecha, resultadosReales) {
     const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
-    const prediccionesGuardadas = localStorage.getItem(`predicciones_${loteriaActiva}_${fecha}`);
-    if (!prediccionesGuardadas) {
-        ModeloPesos.totalRevisiones += 1;
-    } else {
-        try {
-            const predicciones = JSON.parse(prediccionesGuardadas);
-            const aciertos = resultadosReales.filter(val => val !== '' && predicciones.includes(val)).length;
-            if (aciertos > 0) ModeloPesos.aciertos += 1;
-            ModeloPesos.totalRevisiones += 1;
-        } catch (e) {
-            console.warn("Error al evaluar predicciones:", e);
-        }
+    const logsEjecucionGuardados = localStorage.getItem(`log_motor_${loteriaActiva}_${fecha}`);
+    
+    if (!logsEjecucionGuardados) return; // Si no hay predicciones calculadas para este día, no hay nada que auditar.
+
+    try {
+        const logsDia = JSON.parse(logsEjecucionGuardados);
+
+        HORAS.forEach((hora, i) => {
+            const resultadoReal = resultadosReales[i];
+            if (!resultadoReal) return; // Si esta hora no se ingresó, saltar
+
+            const logHora = logsDia[hora];
+            if (!logHora) return;
+
+            MatrizEficienciaHoraria[hora].totalAlertas += 1;
+
+            // Verificar si el conjunto unificado de predicciones de esta hora acertó
+            if (logHora.prediccionesGeneradas.includes(resultadoReal)) {
+                MatrizEficienciaHoraria[hora].aciertosReales += 1;
+            }
+
+            // --- ESCANEO DE ESTRATEGIA GANADORA EN LA HORA ---
+            // Revisamos qué bloques lógicos individuales contenían el número ganador para subirles o bajarles el peso
+            
+            // Estrategia A: Pool Caliente de 48 horas
+            if (logHora.componentes.poolCaliente.includes(resultadoReal)) {
+                MatrizEficienciaHoraria[hora].estrategiaA_pool += 15; // Recompensa por acierto inmediato
+            } else {
+                MatrizEficienciaHoraria[hora].estrategiaA_pool = Math.max(10, MatrizEficienciaHoraria[hora].estrategiaA_pool - 3);
+            }
+
+            // Estrategia B: Anclajes y cruces históricos
+            if (logHora.componentes.poolAnclaje.includes(resultadoReal)) {
+                MatrizEficienciaHoraria[hora].estrategiaB_anclaje += 25; // Los cruces son más difíciles, merecen más premio
+            } else {
+                MatrizEficienciaHoraria[hora].estrategiaB_anclaje = Math.max(10, MatrizEficienciaHoraria[hora].estrategiaB_anclaje - 4);
+            }
+
+            // Estrategia C: Ciclos de atraso / Espacios fríos
+            if (logHora.componentes.ciclosRetraso.includes(resultadoReal)) {
+                MatrizEficienciaHoraria[hora].estrategiaC_vacios += 20;
+            } else {
+                MatrizEficienciaHoraria[hora].estrategiaC_vacios = Math.max(10, MatrizEficienciaHoraria[hora].estrategiaC_vacios - 3);
+            }
+        });
+
+        // Guardar los pesos adaptados en LocalStorage
+        localStorage.setItem(`matriz_eficiencia_${loteriaActiva}`, JSON.stringify(MatrizEficienciaHoraria));
+
+    } catch (e) {
+        console.warn("Fallo crítico en el circuito del Feedback Loop:", e);
     }
-    localStorage.setItem(`pesos_animalitos_${loteriaActiva}`, JSON.stringify(ModeloPesos));
 }
 
 // ==========================================
@@ -203,16 +270,17 @@ document.addEventListener('focusout', (e) => {
     if (e.target.classList.contains('js-num-input')) {
         let val = e.target.value.trim();
         if (val === '') return;
-        
+       
         if (val === "0" || val === "00") return;
-        
+       
         let num = parseInt(val, 10);
         let limiteMaximo = obtenerLimiteLoteria();
 
         if (!isNaN(num) && num >= 1 && num <= limiteMaximo) {
             e.target.value = num < 10 ? '0' + num : num.toString();
         } else {
-            e.target.value = ''; // Borra si el número excede el límite de la lotería (ej: 40 en Lotto Activo)
+            e.target.value = '';
+            mostrarToast(`⚠️ El límite para este juego es el número ${limiteMaximo}`);
         }
     }
 });
@@ -244,7 +312,7 @@ function calcularCiclosRetrasados(fechasOrdenadas, universo, fechaActual) {
 
     universo.forEach(n => {
         if (ultimaAparicion[n] === Infinity) {
-            retrasos[n] = 30;
+            retrasos[n] = 30; // Ventana penalizada estándar por defecto
         } else {
             let diasSinSalir = Math.floor((hoy - ultimaAparicion[n]) / (1000 * 60 * 60 * 24));
             retrasos[n] = diasSinSalir;
@@ -257,7 +325,6 @@ function calcularCiclosRetrasados(fechasOrdenadas, universo, fechaActual) {
 
 function analizarSumaHistorica(fechasOrdenadas) {
     let limiteMaximo = obtenerLimiteLoteria();
-    // Ajustamos promedios esperados si es de 36 o de 75 animales
     let promedioBase = limiteMaximo === 36 ? 220 : 450;
     let rangoBase = limiteMaximo === 36 ? 50 : 100;
 
@@ -282,7 +349,7 @@ function obtenerTecnicaDominante(num, contribuciones) {
     const c = contribuciones[num];
     let maxTecnica = Object.keys(c).reduce((a, b) => c[a] > c[b] ? a : b);
     const mapa = {
-        anclaje: '⚓ Anclaje Histórico',
+        anclaje: '⚓ Anclaje Horario',
         secuencial: '🔗 Cadena de Transición',
         pool: '🔥 Pool Caliente 48h',
         ciclos: '🔄 Ciclo de Atraso',
@@ -293,7 +360,115 @@ function obtenerTecnicaDominante(num, contribuciones) {
 }
 
 // ==========================================
-// MOTOR MATEMÁTICO UNIFICADO (btnGenerar)
+// INTERFAZ: MANEJO DEL MODAL DE AUDITORÍA
+// ==========================================
+function inicializarEventosInterfaz() {
+    const btnStats = document.getElementById('btn-abrir-stats');
+    const modal = document.getElementById('modal-auditoria');
+    const btnCerrar = document.getElementById('btn-cerrar-modal');
+
+    if (btnStats && modal) {
+        btnStats.addEventListener('click', () => {
+            renderizarDatosPanelAuditoria();
+            modal.style.display = 'flex';
+        });
+    }
+
+    if (btnCerrar && modal) {
+        btnCerrar.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    // Lógica para cambiar de pestañas (Tabs) dentro de la auditoría
+    const tabBotones = document.querySelectorAll('.tab-btn');
+    tabBotones.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBotones.forEach(b => b.classList.remove('activo'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
+
+            btn.classList.add('activo');
+            const tabId = btn.getAttribute('data-tab');
+            const targetContent = document.getElementById(`tab-${tabId}`);
+            if (targetContent) targetContent.classList.add('activo');
+        });
+    });
+}
+
+/**
+ * Agrupa la información de la matriz autoadaptativa y la pinta en el Modal
+ */
+function renderizarDatosPanelAuditoria() {
+    const podioContainer = document.getElementById('podio-dinamico');
+    const listaHoras = document.getElementById('lista-eficiencia-horas');
+    if (!listaHoras) return;
+
+    // 1. Calcular eficiencia horaria para la lista
+    let htmlHoras = '';
+    let ordenHoras = [...HORAS];
+
+    // Ordenar horas de mayor a menor precisión calculada por el loop
+    ordenHoras.sort((a,b) => {
+        let efA = MatrizEficienciaHoraria[a].totalAlertas > 0 ? (MatrizEficienciaHoraria[a].aciertosReales / MatrizEficienciaHoraria[a].totalAlertas) : 0;
+        let efB = MatrizEficienciaHoraria[b].totalAlertas > 0 ? (MatrizEficienciaHoraria[b].aciertosReales / MatrizEficienciaHoraria[b].totalAlertas) : 0;
+        return efB - efA;
+    });
+
+    ordenHoras.forEach(h => {
+        let m = MatrizEficienciaHoraria[h];
+        let porcentaje = m.totalAlertas > 0 ? Math.round((m.aciertosReales / m.totalAlertas) * 100) : 100;
+        let claseBadge = porcentaje > 60 ? 'badge-top' : (porcentaje < 35 ? 'badge-low' : '');
+
+        htmlHoras += `
+            <div class="item-lista">
+                <span>⏰ ${h} <small style="color:#777; font-weight:normal;">(${m.totalAlertas} eval.)</small></span>
+                <span class="${claseBadge}">${porcentaje}% acierto</span>
+            </div>
+        `;
+    });
+    listaHoras.innerHTML = htmlHoras;
+
+    // 2. Renderizar el Podio de Estrategias Dominantes
+    if (podioContainer) {
+        // Acumular valores globales para ver cuál va ganando en toda la jornada
+        let totales = { pool: 0, anclaje: 0, vacios: 0 };
+        HORAS.forEach(h => {
+            totales.pool += MatrizEficienciaHoraria[h].estrategiaA_pool;
+            totales.anclaje += MatrizEficienciaHoraria[h].estrategiaB_anclaje;
+            totales.vacios += MatrizEficienciaHoraria[h].estrategiaC_vacios;
+        });
+
+        let arrEstrategias = [
+            { id: 'pool', nombre: '🔥 Ráfaga 48h', puntos: totales.pool, h: 70 },
+            { id: 'anclaje', nombre: '⚓ Histórico', puntos: totales.anclaje, h: 110 },
+            { id: 'vacios', nombre: '🔄 C. Atraso', puntos: totales.vacios, h: 50 }
+        ];
+        
+        // Ordenar para el podio (Puesto 1 en el centro, 2 izquierda, 3 derecha)
+        arrEstrategias.sort((a,b) => b.puntos - a.puntos);
+
+        podioContainer.innerHTML = `
+            <div class="podio-item">
+                <span class="podio-nombre">${arrEstrategias[1].nombre}</span>
+                <div class="podio-numero">2°</div>
+                <div class="podio-barra" style="height: 65px;">${arrEstrategias[1].puntos}</div>
+            </div>
+            <div class="podio-item">
+                <span class="podio-nombre" style="font-weight:bold; color: #b38728;">${arrEstrategias[0].nombre}</span>
+                <div class="podio-numero" style="font-size:24px;">👑</div>
+                <div class="podio-barra" style="height: 95px; background: linear-gradient(to top, #bf953f, #fcf6ba);">${arrEstrategias[0].puntos}</div>
+            </div>
+            <div class="podio-item">
+                <span class="podio-nombre">${arrEstrategias[2].nombre}</span>
+                <div class="podio-numero">3°</div>
+                <div class="podio-barra" style="height: 45px;">${arrEstrategias[2].puntos}</div>
+            </div>
+        `;
+    }
+}
+
+// ==========================================
+// MOTOR MATEMÁTICO ADAPTATIVO (btnGenerar)
 // ==========================================
 const btnGenerar = document.getElementById('btnGenerar');
 if (btnGenerar) {
@@ -307,9 +482,14 @@ if (btnGenerar) {
                 return;
             }
 
-            // CREACIÓN DEL UNIVERSO DINÁMICO
+            // CREACIÓN DEL UNIVERSO DINÁMICO SEGÚN EL JUEGO SELECCIONADO
             let universo = ["0", "00"];
             let limiteMaximo = obtenerLimiteLoteria();
+            
+            // FILTRO DE HISTORIAL CAMALEÓNICO: Si es Guácharo, expandimos la ventana de inspección
+            const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
+            const esJuegoExpandido = loteriaActiva.toLowerCase().includes('guacharo') || loteriaActiva.toLowerCase().includes('chaima');
+            
             for (let i = 1; i <= limiteMaximo; i++) universo.push(i.toString());
 
             // 1. EXTRAER VALORES ACTUALES EN PANTALLA
@@ -323,21 +503,26 @@ if (btnGenerar) {
                 }
             });
 
-            // 2. OBTENER POOL CALIENTE
+            // 2. OBTENER POOL CALIENTE (Ventana adaptativa según el azar del tablero)
             const fechaActualDate = new Date(fechaActual);
             let diasFiltrados = fechasOrdenadas.filter(f => new Date(f) < fechaActualDate);
             if (diasFiltrados.length === 0) {
                 diasFiltrados = [...fechasOrdenadas];
             }
 
-            let uDia1 = BaseDatos[diasFiltrados[diasFiltrados.length - 1]] || [];
-            let uDia2 = diasFiltrados.length > 1 ? (BaseDatos[diasFiltrados[diasFiltrados.length - 2]] || []) : [];
-            let ultimosNums = [...uDia1.filter(x => x !== ''), ...uDia2.filter(x => x !== '')];
+            // Si es un juego complejo como el Guácharo, duplicamos el historial analizado (30 días vs 15 días)
+            const ventanaDias = esJuegoExpandido ? 30 : 15;
+            let diasAInspecionar = diasFiltrados.slice(-ventanaDias);
+
+            let ultimosNums = [];
+            diasAInspecionar.forEach(f => {
+                (BaseDatos[f] || []).forEach(n => {
+                    if (n !== '') ultimosNums.push(n);
+                });
+            });
 
             let freq48 = {};
             ultimosNums.forEach(n => freq48[n] = (freq48[n] || 0) + 1);
-            
-            // Filtramos para asegurar que no entren números del guácharo en loterías pequeñas
             let poolCaliente = [...new Set(ultimosNums)].filter(n => universo.includes(n)).sort((a, b) => freq48[b] - freq48[a]);
 
             // 3. ALGORITMO DE ANCLAJE EN VIVO
@@ -370,8 +555,8 @@ if (btnGenerar) {
             let todosLosVistos = [];
             fechasOrdenadas.forEach(f => {
                 if (f !== fechaActual) {
-                    (BaseDatos[f] || []).forEach(n => { 
-                        if (n !== '' && universo.includes(n)) todosLosVistos.push(n); 
+                    (BaseDatos[f] || []).forEach(n => {
+                        if (n !== '' && universo.includes(n)) todosLosVistos.push(n);
                     });
                 }
             });
@@ -383,7 +568,7 @@ if (btnGenerar) {
             let setVistos = new Set(todosLosVistos);
             let enjaulados = universo.filter(n => !setVistos.has(n));
 
-            // 5. CADENA DE TRANSICIONES
+            // 5. CADENA DE TRANSICIONES (Secuenciales)
             let transiciones = {};
             for (let i = 0; i < todosLosVistos.length - 1; i++) {
                 let act = todosLosVistos[i];
@@ -405,7 +590,10 @@ if (btnGenerar) {
             let promedioPorHora = numerosRestantes > 0 ? (sumaPromedio - sumaParcialHoy) / numerosRestantes : 0;
             let rangoPorHora = rango / 12;
 
-            // 7. ASIGNACIÓN DINÁMICA DE PESOS
+            // --- CONTENEDOR TEMPORAL PARA AUDITORÍA DE HORAS EN TIEMPO REAL ---
+            let logsEstrategiasHoy = {};
+
+            // 7. ASIGNACIÓN DINÁMICA DE PESOS BASADA EN EL HORARIO ACTIVO (Feedback Loop)
             let pesos = {};
             let tecnicasContribucion = {};
 
@@ -417,49 +605,66 @@ if (btnGenerar) {
                 tecnicasContribucion[num][tecnica] += cantidad;
             }
 
-            // 7a. Anclaje
-            poolAnclajeFinal.forEach((n, i) => {
-                let aporte = ModeloPesos.anclaje - (i * 5);
-                if (aporte > 0) addPeso(n, aporte, 'anclaje');
-            });
+            // Calculamos las recomendaciones individualizadas por cada hora del tablero
+            HORAS.forEach((horaActiva) => {
+                // Extraer la configuración de pesos auto-optimizada para ESTA hora específica
+                const configuracionHoraria = MatrizEficienciaHoraria[horaActiva];
 
-            // 7b. Secuencial
-            let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
-            if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
-                transiciones[ultimoNumeroGlobal].forEach(n => {
-                    if (universo.includes(n)) addPeso(n, ModeloPesos.secuencial, 'secuencial');
+                // Guardar una captura limpia de qué números sugiere cada bloque para auditar en el futuro
+                logsEstrategiasHoy[horaActiva] = {
+                    componentes: {
+                        poolCaliente: poolCaliente.slice(0, 5),
+                        poolAnclaje: poolAnclajeFinal.slice(0, 5),
+                        ciclosRetraso: universo.filter(n => (retrasos[n] / maxRetraso) > 0.7)
+                    },
+                    prediccionesGeneradas: []
+                };
+
+                // Inyectar pesos modulados por la efectividad horaria real del Feedback loop
+                // 7a. Anclaje
+                poolAnclajeFinal.forEach((n, i) => {
+                    let aporte = configuracionHoraria.estrategiaB_anclaje - (i * 5);
+                    if (aporte > 0) addPeso(n, aporte, 'anclaje');
                 });
-            }
 
-            // 7c. Pool caliente
-            poolCaliente.forEach((n, i) => {
-                let aporte = Math.max(ModeloPesos.pool - (i * 2), 2);
-                addPeso(n, aporte, 'pool');
-            });
+                // 7b. Secuencial
+                let ultimoNumeroGlobal = todosLosVistos[todosLosVistos.length - 1];
+                if (ultimoNumeroGlobal && transiciones[ultimoNumeroGlobal]) {
+                    transiciones[ultimoNumeroGlobal].forEach(n => {
+                        if (universo.includes(n)) addPeso(n, 40, 'secuencial');
+                    });
+                }
 
-            // 7d. Enjaulados
-            enjaulados.forEach(n => {
-                addPeso(n, ModeloPesos.enjaulado, 'enjaulado');
-            });
+                // 7c. Pool caliente (Continuidad de ráfagas cortas)
+                poolCaliente.forEach((n, i) => {
+                    let aporte = Math.max(configuracionHoraria.estrategiaA_pool - (i * 2), 2);
+                    addPeso(n, aporte, 'pool');
+                });
 
-            // 7e. Ciclos de retraso
-            universo.forEach(n => {
-                let factorRetraso = (retrasos[n] / maxRetraso) * 15;
-                addPeso(n, factorRetraso, 'ciclos');
-            });
+                // 7d. Enjaulados
+                enjaulados.forEach(n => {
+                    addPeso(n, 15, 'enjaulado');
+                });
 
-            // 7f. Equilibrio de suma
-            if (numerosRestantes > 0) {
+                // 7e. Ciclos de retraso (Compensación de vacíos)
                 universo.forEach(n => {
-                    let numVal = parseInt(n);
-                    if (isNaN(numVal)) return;
-                    let diferencia = Math.abs(numVal - promedioPorHora);
-                    let bonusSuma = Math.max(0, 10 - (diferencia / rangoPorHora) * 10);
-                    addPeso(n, bonusSuma, 'suma');
+                    let factorRetraso = (retrasos[n] / maxRetraso) * (configuracionHoraria.estrategiaC_vacios * 0.15);
+                    addPeso(n, factorRetraso, 'ciclos');
                 });
-            }
 
-            // 8. FILTRADO
+                // 7f. Equilibrio de suma
+                if (numerosRestantes > 0) {
+                    universo.forEach(n => {
+                        let numVal = parseInt(n);
+                        if (isNaN(numVal)) return;
+                        let diferencia = Math.abs(numVal - promedioPorHora);
+                        let bonusSuma = Math.max(0, 10 - (diferencia / rangoPorHora) * 10);
+                        addPeso(n, bonusSuma, 'suma');
+                    });
+                }
+            });
+
+            // 8. FILTRADO Y RESOLUCIÓN DE UMBRALES
             let pesosArray = Object.values(pesos);
             let pesoMaximo = Math.max(...pesosArray, 1);
             let umbralConfianza = pesoMaximo * 0.7;
@@ -476,23 +681,39 @@ if (btnGenerar) {
                 prediccionesFuertes = prediccionesFuertes.slice(0, 4);
             }
 
-            const loteriaActiva = selectLoteria ? selectLoteria.value : 'general';
+            // Archivar el bloque de predicciones globales del día para la verificación tradicional
             localStorage.setItem(`predicciones_${loteriaActiva}_${fechaActual}`, JSON.stringify(prediccionesFuertes));
 
-          // 9. RENDERIZADO FINAL
+            // Cruzar predicciones con cada hora para rellenar la matriz de logs
+            HORAS.forEach(h => {
+                logsEstrategiasHoy[h].prediccionesGeneradas = prediccionesFuertes;
+            });
+            localStorage.setItem(`log_motor_${loteriaActiva}_${fechaActual}`, JSON.stringify(logsEstrategiasHoy));
+
+            // 9. RENDERIZADO FINAL EN LA INTERFAZ DE USUARIO
             const fName = (n) => `[${n.padStart(2, '0')}] ${DICCIONARIO[n] || 'Animal'}`;
 
-            let porcEficiencia = ModeloPesos.totalRevisiones > 0
-                ? Math.round((ModeloPesos.aciertos / ModeloPesos.totalRevisiones) * 100)
+            // Calcular efectividad global sumando los análisis de todas las horas
+            let totalAlertasGlobales = 0;
+            let totalAciertosGlobales = 0;
+            HORAS.forEach(h => {
+                totalAlertasGlobales += MatrizEficienciaHoraria[h].totalAlertas;
+                totalAciertosGlobales += MatrizEficienciaHoraria[h].aciertosReales;
+            });
+
+            let porcEficiencia = totalAlertasGlobales > 0
+                ? Math.round((totalAciertosGlobales / totalAlertasGlobales) * 100)
                 : 100;
                
             const txtEficiencia = document.getElementById('txt-eficiencia');
             if (txtEficiencia) txtEficiencia.innerText = `${porcEficiencia}%`;
            
             const txtAprendizajeLog = document.getElementById('txt-aprendizaje-log');
-            if (txtAprendizajeLog) txtAprendizajeLog.innerText = `Basado en ${ModeloPesos.totalRevisiones} evaluaciones. Peso de Anclaje: ${ModeloPesos.anclaje}pts.`;
+            if (txtAprendizajeLog) {
+                txtAprendizajeLog.innerText = `Optimización Activa: Modo ${esJuegoExpandido ? 'Muestreo Extendido (30D)' : 'Ráfaga Dinámica (15D)'}.`;
+            }
 
-             // Tarjetas de predicción
+            // Construir Tarjetas Visuales de Predicción
             const tarjetaContainer = document.getElementById('tarjetas-prediccion-container');
             if (tarjetaContainer) {
                 let tarjetasHTML = '';
@@ -500,49 +721,49 @@ if (btnGenerar) {
                 prediccionesFuertes.forEach((num, idx) => {
                     let nombreAnimal = fName(num);
                     let pesoRel = (pesos[num] / pesoMaximo) * 95;
-                    let porcentajeEstimado = Math.min(95, Math.round(pesoRel)).toFixed(0);
+                    let porcentajeEstimated = Math.min(95, Math.round(pesoRel)).toFixed(0);
                     let tecnica = obtenerTecnicaDominante(num, tecnicasContribucion);
 
-                    let descripcion = idx === 0 ? 'Predicción principal' : (idx === 1 ? 'Alta probabilidad secundaria' : 'Opción complementaria');
+                    let descripcion = idx === 0 ? 'Predicción Principal' : (idx === 1 ? 'Alta Probabilidad Secundaria' : 'Opción Complementaria');
 
                     tarjetasHTML += `
                         <div class="tarjeta-prediccion">
                             <div class="pred-info">
                                 <h4>${nombreAnimal}</h4>
                                 <p>${descripcion}</p>
-                                <span class="badge-tecnica" style="font-size:12px; color: var(--texto-secundario); background: rgba(0,0,0,0.05); padding:2px 8px; border-radius:12px;">${tecnica}</span>
+                                <span class="badge-tecnica" style="font-size:12px; color: var(--texto-principal); background: var(--bg-app); padding:3px 10px; border-radius:12px; font-weight:bold; border:1px solid var(--borde-color); display:inline-block; margin-top:5px;">${tecnica}</span>
                             </div>
-                            <div class="pred-porcentaje pred-verde">${porcentajeEstimado}%</div>
+                            <div class="pred-porcentaje pred-verde">${porcentajeEstimated}%</div>
                         </div>
                     `;
                 });
 
                 if (prediccionesFuertes.length === 0) {
-                    tarjetasHTML = '<p class="text-center">No hay predicciones que superen el umbral de confianza hoy. Intenta con más datos históricos.</p>';
+                    tarjetasHTML = '<p class="text-center">Historial analizado. Cargue más datos para ajustar el umbral.</p>';
                 }
                 tarjetaContainer.innerHTML = tarjetasHTML;
             }
 
-            // Pool caliente
+            // Actualizar fila del Pool Caliente
             const poolBadges = document.getElementById('pool-badges');
             if (poolBadges) {
                 poolBadges.innerHTML = poolCaliente.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('');
             }
 
-            // Conexión histórica
+            // Actualizar Conexión e Intersección Histórica
             const txtAnclaje = document.getElementById('txt-anclaje-info');
             const badgesAnclaje = document.getElementById('anclaje-badges');
             if (txtAnclaje && badgesAnclaje) {
                 if (numsHoyEnPantalla.length > 0) {
-                    txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) hoy para cruce dinámico.`;
-                    badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando coincidencias...</div>';
+                    txtAnclaje.innerText = `${numsHoyEnPantalla.length} sorteo(s) detectados hoy para cruce directo.`;
+                    badgesAnclaje.innerHTML = poolAnclajeFinal.slice(0, 6).map(n => `<div class="badge-animalito">${fName(n)}</div>`).join('') || '<div class="badge-animalito">Buscando correlaciones...</div>';
                 } else {
                     txtAnclaje.innerText = "Introduce al menos un resultado de hoy para activar.";
                     badgesAnclaje.innerHTML = '<div class="badge-animalito">Esperando sorteo inicial</div>';
                 }
             }
 
-            // Mapa de calor ADAPTADO AL LÍMITE DE LA LOTERÍA
+            // Mapa de calor autoadaptativo al límite exacto de casillas
             const tableroGrid = document.getElementById('tablero-grid');
             if (tableroGrid) {
                 let tableroHTML = '';
@@ -553,7 +774,7 @@ if (btnGenerar) {
                 tableroGrid.innerHTML = tableroHTML;
             }
 
-            // Cronograma de horas
+            // Cronograma Predictivo Horario Inteligente
             const cronoContainer = document.getElementById('cronograma-horas-container');
             if (cronoContainer) {
                 let cronoHTML = '';
@@ -580,7 +801,7 @@ if (btnGenerar) {
                 cronoContainer.innerHTML = cronoHTML;
             }
 
-            // Despliegue final del panel
+            // Mostrar el contenedor general de resultados deslizando suavemente
             const panelResultados = document.getElementById('panelResultados');
             if (panelResultados) {
                 panelResultados.style.display = 'block';
@@ -595,5 +816,3 @@ if (btnGenerar) {
         }
     });
 }
-
-   
